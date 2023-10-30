@@ -14,24 +14,24 @@ defaults:
     shell: bash # Set the default shell to bash.
 
 jobs:
-  lint:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build and export to Docker
+      - name: Build Apollo Router Lambda
         uses: docker/build-push-action@v5
         with:
           context: .
           load: true
-          tags: latest
+          tags: lambda
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Extract the bootstrap file
+      - name: Extract bootstrap file
         run: |
-          export TMP_IMAGE_ID=$(docker create latest)
+          export TMP_IMAGE_ID=$(docker create lambda)
           docker cp $TMP_IMAGE_ID:/dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap bootstrap
           docker rm -v $TMP_IMAGE_ID
 
