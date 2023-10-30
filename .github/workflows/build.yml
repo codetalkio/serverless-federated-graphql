@@ -1,0 +1,48 @@
+name: "Build: bootstrap"
+
+on:
+  push:
+    paths:
+      - "src/**"
+      - "Dockerfile"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/build.yml"
+
+defaults:
+  run:
+    shell: bash # Set the default shell to bash.
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and export to Docker
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          load: true
+          tags: latest
+
+      - name: Extract the bootstrap file
+        run: |
+          export TMP_IMAGE_ID=$(docker create latest)
+          docker cp $TMP_IMAGE_ID:/dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap bootstrap
+          docker rm -v $TMP_IMAGE_ID
+
+      - uses: ncipollo/release-action@v1.13.0
+        with:
+          artifacts: "bootstrap"
+          # Automatically create the tag from the commit if it doesn't exist.
+          tag: ${{ github.sha }}
+          commit: ${{ github.sha }}
+          name: "Release ${{ github.sha }}"
+          # Automatically generate the release notes, which can be configured. See more here
+          generateReleaseNotes: true
+          # Mark the deployment as the latest.
+          makeLatest: true

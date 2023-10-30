@@ -1,0 +1,35 @@
+FROM amazon/aws-lambda-provided:al2 as builder
+ARG RUST_VERSION=1.72.0
+
+RUN yum install -y jq openssl-devel gcc wget tar gzip unzip \
+  && yum group install -y "Development Tools"
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+  | sh -s -- -y --profile minimal --default-toolchain $RUST_VERSION
+
+# Install a recent cmake.
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.5.1/cmake-3.5.1.tar.gz \
+  && tar -xvf cmake-3.5.1.tar.gz \
+  && cd cmake-3.5.1 \
+  && ./bootstrap \
+  && make \
+  && make install
+
+# Install profobuf (used by apollo-router).
+RUN curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v3.15.8/protoc-3.15.8-linux-x86_64.zip \
+  && unzip protoc-3.15.8-linux-x86_64.zip -d .\
+  # Protobuf expects its "include" directory to be in the same directory as the binary.
+  && mv bin/protoc /usr/local/bin/protoc \
+  && mv include /usr/local/bin/include
+
+# Fetch the cargo-lambda binary.
+RUN curl -LO https://github.com/cargo-lambda/cargo-lambda/releases/download/v0.22.0/cargo-lambda-v0.22.0.x86_64-unknown-linux-musl.tar.gz \
+  && tar -xvf cargo-lambda-v0.22.0.x86_64-unknown-linux-musl.tar.gz \
+  && chmod +x cargo-lambda \
+  && mv cargo-lambda $HOME/.cargo/bin/cargo-lambda
+
+WORKDIR /dist/apollo-router-lambda
+COPY . /dist/apollo-router-lambda
+
+# Build our lambda bootstrap binary. The release artifact can be found at:
+# /dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap
+RUN export PATH="$HOME/.cargo/bin:$PATH"; cargo lambda build --compiler cargo --release

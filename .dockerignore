@@ -1,0 +1,5 @@
+*
+!Cargo.toml
+!src/*
+!router.yaml
+!supergraph.graphql
