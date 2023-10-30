@@ -38,7 +38,7 @@ jobs:
       - name: Get short git SHA
         id: git-sha
         run: |
-          echo "short=$("${{ github.sha }}".SubString(0, 8))" >> $GITHUB_OUTPUT
+          echo "short=${GITHUB_SHA::10}" >> $GITHUB_OUTPUT
 
       - uses: ncipollo/release-action@v1.13.0
         with:
