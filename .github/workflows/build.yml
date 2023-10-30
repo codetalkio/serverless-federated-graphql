@@ -35,13 +35,18 @@ jobs:
           docker cp $TMP_IMAGE_ID:/dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap bootstrap
           docker rm -v $TMP_IMAGE_ID
 
+      - name: Get short git SHA
+        id: git-sha
+        run: |
+          echo "short=$("${{ github.sha }}".SubString(0, 8))" >> $GITHUB_OUTPUT
+
       - uses: ncipollo/release-action@v1.13.0
         with:
           artifacts: "bootstrap"
           # Automatically create the tag from the commit if it doesn't exist.
-          tag: ${{ github.sha }}
+          tag: ${{ steps.git-sha.outputs.short }}
           commit: ${{ github.sha }}
-          name: "Release ${{ github.sha }}"
+          name: "Release ${{ steps.git-sha.outputs.short }}"
           # Automatically generate the release notes, which can be configured. See more here
           generateReleaseNotes: true
           # Mark the deployment as the latest.
