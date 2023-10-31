@@ -20,17 +20,21 @@ async fn handle_request(event: Request) -> Result<impl IntoResponse, Error> {
     let body = event.body();
     // let event_payload = std::str::from_utf8(body).expect("invalid utf-8 sequence");
     let event_payload: apollo_router::graphql::Request =
-        serde_json::from_slice(body).expect("invalid utf-8 sequence");
+        serde_json::from_slice(body).expect("invalid graphql request");
     info!("👉 Proxying request to router: {:?}", event_payload);
+    println!("👉 Proxying request to router: {:?}", event_payload);
 
-    let request = supergraph::Request::fake_builder()
+    let builder = supergraph::Request::fake_builder()
         .header(CONTENT_TYPE, "application/json")
         .query(event_payload.query.unwrap_or("".to_string()))
-        .operation_name(event_payload.operation_name.unwrap_or("".to_string()))
         .variables(event_payload.variables)
-        .extensions(event_payload.extensions)
-        .build()
-        .unwrap();
+        .extensions(event_payload.extensions);
+    // TODO: Avoid this weird hack.
+    let request = if let Some(operation_name) = event_payload.operation_name {
+        builder.operation_name(operation_name).build().unwrap()
+    } else {
+        builder.build().unwrap()
+    };
 
     let supergraph = TestHarness::builder()
         .configuration(Arc::new(configuration))
@@ -46,6 +50,7 @@ async fn handle_request(event: Request) -> Result<impl IntoResponse, Error> {
         response.next_response().await.unwrap().unwrap().to_vec().as_slice(),
     )?;
     info!("👉 Deserialized Response: {:?}", resp);
+    println!("👉 Deserialized Response: {:?}", resp);
 
     Ok(resp)
 }
