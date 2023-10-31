@@ -37,7 +37,7 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: bootstrap-with-server-X86_64
+          name: with-server-x86-64
           path: lambda-with-server/bootstrap
           if-no-files-found: error
           retention-days: 1
@@ -67,7 +67,7 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: bootstrap-directly-X86_64
+          name: directly-x86-64
           path: lambda-directly/bootstrap
           if-no-files-found: error
           retention-days: 1
@@ -86,18 +86,24 @@ jobs:
         with:
           path: ./release-artifacts/
 
-      - name: Get short git SHA
-        id: git-sha
+      - name: Rename release artifacts
         run: |
-          echo "short=${GITHUB_SHA::10}" >> $GITHUB_OUTPUT
+          mv release-artifacts/with-server-x86-64/bootstrap-with-server-x86-64 release-artifacts/bootstrap-with-server-x86-64
+          mv release-artifacts/directly-x86-64/bootstrap-directly-x86-64 release-artifacts/bootstrap-directly-x86-64
+
+      - name: Set release info
+        id: info
+        run: |
+          echo "git-sha=${GITHUB_SHA::10}" >> $GITHUB_OUTPUT
+          echo "tag-name=$(date +"%Y-%m-%d-at-%H-%M")" >> $GITHUB_OUTPUT
 
       - uses: ncipollo/release-action@v1.13.0
         with:
-          artifacts: "release-artifacts/bootstrap-with-server-X86_64,release-artifacts/bootstrap-directly-X86_64"
+          artifacts: "release-artifacts/bootstrap-with-server-x86-64,release-artifacts/bootstrap-directly-x86-64"
           # Automatically create the tag from the commit if it doesn't exist.
-          tag: ${{ steps.git-sha.outputs.short }}
+          tag: ${{ steps.info.outputs.tag-name }}
           commit: ${{ github.sha }}
-          name: "Release ${{ steps.git-sha.outputs.short }}"
+          name: "Release ${{ steps.info.outputs.git-sha }}"
           # Automatically generate the release notes, which can be configured. See more here
           generateReleaseNotes: true
           # Mark the deployment as the latest.
