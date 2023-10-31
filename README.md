@@ -66,19 +66,26 @@ You now have the following contents in your `apollo-router` folder:
 And you're ready to deploy using your preferred method of AWS CDK/SAM/SLS/SST/CloudFormation/Terraform.
 
 # Cold Starts
-Both of the approachs unfortunately have quite a high cold start time. The `lambda-directly` approach wins by a tiny margin, but none are great.
+Both of the approachs unfortunately have quite a high cold start time. The `lambda-directly` approach wins by a tiny margin, but none are great. None of the variants talk to any Subgraphs, this is purely measuring the overhead of startup.
 
 `lambda-with-server`
 
-<img width="1635" alt="Direct Router Cold (Products query) Screenshot 2023-10-31 at 20 50 17" src="https://github.com/codetalkio/apollo-router-lambda/assets/1189998/5a55a92d-5f38-45b9-8b41-47c77bc6cc20">
+<img width="1635" alt="Direct Router Cold Screenshot 2023-10-31 at 20 50 17" src="https://github.com/codetalkio/apollo-router-lambda/assets/1189998/5a55a92d-5f38-45b9-8b41-47c77bc6cc20">
+
+A good 450ms of this is spent just waiting for the Router to spin up:
+
+<img width="1377" alt="Apollo as Server in Lambda Screenshot 2023-10-30 at 23 19 50" src="https://github.com/codetalkio/apollo-router-lambda/assets/1189998/e7167483-96a1-48b3-99c3-0df5748f1850">
+
 
 `lambda-directly`
 
-<img width="1633" alt="Lambda Router Cold (No query, Minimal) Screenshot 2023-10-31 at 20 57 47" src="https://github.com/codetalkio/apollo-router-lambda/assets/1189998/cd3f4e41-91ef-41e2-ba1a-1213803bff30">
+<img width="1633" alt="Lambda Router Cold Screenshot 2023-10-31 at 20 57 47" src="https://github.com/codetalkio/apollo-router-lambda/assets/1189998/cd3f4e41-91ef-41e2-ba1a-1213803bff30">
 
 # Warm Starts
 
 Here we see `lambda-with-server` shine. Once it's started the Apollo Router, then it has relatively little overhead. `lambda-directly` on the other hand will build a `TestHarness` on each new request, and will keep paying a high cost, slowing it down.
+
+Both of these examples talk to 1 warm subgraph implemented in Rust, to simulate a real warm run.
 
 `lambda-with-server`
 
