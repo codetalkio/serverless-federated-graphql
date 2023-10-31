@@ -18,16 +18,17 @@ async fn handle_request(event: Request) -> Result<impl IntoResponse, Error> {
     let configuration = serde_yaml::from_str::<Configuration>(&config).unwrap();
 
     let body = event.body();
-    let event_payload = std::str::from_utf8(body).expect("invalid utf-8 sequence");
+    // let event_payload = std::str::from_utf8(body).expect("invalid utf-8 sequence");
+    let event_payload: apollo_router::graphql::Request =
+        serde_json::from_slice(body).expect("invalid utf-8 sequence");
     info!("👉 Proxying request to router: {:?}", event_payload);
 
     let request = supergraph::Request::fake_builder()
         .header(CONTENT_TYPE, "application/json")
-        // TODO: Extract these from the event_payload.
-        .query("query ExampleQuery { products { __typename id } }")
-        .operation_name("ExampleQuery")
-        // Construct variables as JsonMap<ByteString, Value>.
-        // .variables("")
+        .query(event_payload.query.unwrap_or("".to_string()))
+        .operation_name(event_payload.operation_name.unwrap_or("".to_string()))
+        .variables(event_payload.variables)
+        .extensions(event_payload.extensions)
         .build()
         .unwrap();
 
@@ -40,21 +41,13 @@ async fn handle_request(event: Request) -> Result<impl IntoResponse, Error> {
         .await?;
     let mut response = supergraph.oneshot(request.try_into().unwrap()).await?;
 
+    // Alternatively, deserialize to apollo_router::graphql::Response.
     let resp: serde_json::Value = serde_json::from_slice(
         response.next_response().await.unwrap().unwrap().to_vec().as_slice(),
     )?;
+    info!("👉 Deserialized Response: {:?}", resp);
+
     Ok(resp)
-
-    // let resp: apollo_router::graphql::Response = serde_json::from_slice(
-    //     response.next_response().await.unwrap().unwrap().to_vec().as_slice(),
-    // )?;
-    // info!("👉 Deserialized Response: {:?}", resp);
-    // // let status = resp.status();
-    // // let payload = resp.json::<serde_json::Value>().await?;
-    // let payload = serde_json::to_string(&resp).unwrap();
-
-    // TODO: Return whitelisted headers from the Router response.
-    // Ok(payload)
 }
 
 async fn handler() -> Result<(), Error> {
