@@ -304,6 +304,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "apollo-router-lambda"
+version = "0.1.0"
+dependencies = [
+ "apollo-router",
+ "lambda_http",
+ "lambda_runtime",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "serde_yaml 0.9.27",
+ "simple-error",
+ "tokio",
+ "tower",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "arc-swap"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3204,24 +3222,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
-]
-
-[[package]]
-name = "ms-apollo"
-version = "0.1.0"
-dependencies = [
- "apollo-router",
- "lambda_http",
- "lambda_runtime",
- "reqwest",
- "serde",
- "serde_json",
- "serde_yaml 0.9.27",
- "simple-error",
- "tokio",
- "tower",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]

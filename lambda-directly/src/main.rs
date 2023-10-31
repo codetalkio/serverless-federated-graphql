@@ -1,4 +1,3 @@
-use apollo_router::graphql;
 use apollo_router::services::supergraph;
 use apollo_router::Configuration;
 use apollo_router::TestHarness;
@@ -41,18 +40,21 @@ async fn handle_request(event: Request) -> Result<impl IntoResponse, Error> {
         .await?;
     let mut response = supergraph.oneshot(request.try_into().unwrap()).await?;
 
-    // : graphql::Response
-    let resp: graphql::Response = serde_json::from_slice(
+    let resp: serde_json::Value = serde_json::from_slice(
         response.next_response().await.unwrap().unwrap().to_vec().as_slice(),
     )?;
-    info!("👉 Deserialized Response: {:?}", resp);
-    // let status = resp.status();
-    // let payload = resp.json::<serde_json::Value>().await?;
-    let payload = serde_json::to_string(&resp).unwrap();
+    Ok(resp)
+
+    // let resp: apollo_router::graphql::Response = serde_json::from_slice(
+    //     response.next_response().await.unwrap().unwrap().to_vec().as_slice(),
+    // )?;
+    // info!("👉 Deserialized Response: {:?}", resp);
+    // // let status = resp.status();
+    // // let payload = resp.json::<serde_json::Value>().await?;
+    // let payload = serde_json::to_string(&resp).unwrap();
 
     // TODO: Return whitelisted headers from the Router response.
-    // Ok((status, payload))
-    Ok(payload)
+    // Ok(payload)
 }
 
 async fn handler() -> Result<(), Error> {
