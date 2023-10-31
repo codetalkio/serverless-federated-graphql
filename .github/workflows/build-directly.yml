@@ -1,0 +1,51 @@
+name: "Build: bootstrap (directly)"
+
+on:
+  push:
+    paths:
+      - "lambda-directly/**"
+      - ".github/workflows/build.yml"
+
+defaults:
+  run:
+    shell: bash # Set the default shell to bash.
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build Apollo Router Lambda
+        uses: docker/build-push-action@v5
+        with:
+          context: lambda-directly
+          load: true
+          tags: lambda
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Extract bootstrap file
+        working-directory: lambda-directly
+        run: |
+          export TMP_IMAGE_ID=$(docker create lambda)
+          docker cp $TMP_IMAGE_ID:/dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap bootstrap
+          docker rm -v $TMP_IMAGE_ID
+
+      - name: Get short git SHA
+        id: git-sha
+        run: |
+          echo "short=${GITHUB_SHA::10}" >> $GITHUB_OUTPUT
+
+      - uses: ncipollo/release-action@v1.13.0
+        with:
+          artifacts: "lambda-directly/bootstrap"
+          # Automatically create the tag from the commit if it doesn't exist.
+          tag: ${{ steps.git-sha.outputs.short }}
+          commit: ${{ github.sha }}
+          name: "Release ${{ steps.git-sha.outputs.short }}"
+          # Automatically generate the release notes, which can be configured. See more here
+          generateReleaseNotes: true
+          # Mark the deployment as the latest.
+          makeLatest: true

@@ -3,7 +3,7 @@ use lambda_http::{run, service_fn, Error, IntoResponse, Request};
 use reqwest::{header::CONTENT_TYPE, Client, Response};
 use std::env;
 use std::fs;
-use tracing::debug;
+use tracing::info;
 
 /// Invoke the router locally by sending the event to the router's local HTTP server.
 async fn invoke(event: &Request) -> Result<Response, Error> {
@@ -13,7 +13,7 @@ async fn invoke(event: &Request) -> Result<Response, Error> {
     let event_payload = std::str::from_utf8(body).expect("invalid utf-8 sequence");
 
     let client = Client::new();
-    debug!("Proxying request to router: {:?}", event_payload);
+    info!("Proxying request to router: {:?}", event_payload);
 
     let resp = client
         .post(url)
@@ -22,7 +22,7 @@ async fn invoke(event: &Request) -> Result<Response, Error> {
         .body(event_payload.to_string())
         .send()
         .await?;
-    debug!("Response from router: {:?}", resp);
+    info!("Response from router: {:?}", resp);
     Ok(resp)
 }
 

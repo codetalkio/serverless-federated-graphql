@@ -1,12 +1,9 @@
-name: "Build: bootstrap"
+name: "Build: bootstrap (server)"
 
 on:
   push:
     paths:
-      - "src/**"
-      - "Dockerfile"
-      - "Cargo.toml"
-      - "Cargo.lock"
+      - "lambda-with-server/**"
       - ".github/workflows/build.yml"
 
 defaults:
@@ -23,13 +20,14 @@ jobs:
       - name: Build Apollo Router Lambda
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: lambda-with-server
           load: true
           tags: lambda
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Extract bootstrap file
+        working-directory: lambda-with-server
         run: |
           export TMP_IMAGE_ID=$(docker create lambda)
           docker cp $TMP_IMAGE_ID:/dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap bootstrap
@@ -42,7 +40,7 @@ jobs:
 
       - uses: ncipollo/release-action@v1.13.0
         with:
-          artifacts: "bootstrap"
+          artifacts: "lambda-with-server/bootstrap"
           # Automatically create the tag from the commit if it doesn't exist.
           tag: ${{ steps.git-sha.outputs.short }}
           commit: ${{ github.sha }}
