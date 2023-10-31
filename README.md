@@ -18,6 +18,15 @@ Check out the code and `Dockerfile` for each. There's really not a lot going on,
 | `lambda-with-server` | · Full router functionality (almost) | · Cold Start: ~1.58s <br/>· Warm Start: ~49ms |
 | `lambda-directly` | · No need to wait for a server to start first (lower overhead) | · Cold Start: ~1.32s <br/>· Warm Start: ~314ms |
 
+Overview:
+
+- [How to use](#how-to-use)
+- [Cold Starts](#cold-starts)
+- [Warm Starts](#warm-starts)
+- [Comparison: Rust Subgraph in AWS Lambda](#comparison-rust-subgraph-in-aws-lambda)
+- [Comparison: Federation via Apollo Gateway](#comparison-federation-via-apollo-gateway)
+- [Comparison: Federation via GraphQL Mesh](#comparison-federation-via-graphql-mesh)
+
 # How to use
 
 Each of the approach are generic and can be used as-is. You can simply grab whichever variant you want from the [Releases](https://github.com/codetalkio/apollo-router-lambda/releases) page, which uploads the `bootstrap` artifact from each of them.
