@@ -1,0 +1,103 @@
+name: "Build: bootstrap"
+
+on:
+  push:
+    paths:
+      - "lambda-with-server/**"
+      - "lambda-directly/**"
+      - ".github/workflows/release.yml"
+
+defaults:
+  run:
+    shell: bash # Set the default shell to bash.
+
+jobs:
+  build-with-server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      # TODO: Build ARM_64 version.
+      - name: Build Apollo Router Lambda
+        uses: docker/build-push-action@v5
+        with:
+          context: lambda-with-server
+          load: true
+          tags: lambda
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Extract bootstrap file
+        working-directory: lambda-with-server
+        run: |
+          export TMP_IMAGE_ID=$(docker create lambda)
+          docker cp $TMP_IMAGE_ID:/dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap bootstrap
+          docker rm -v $TMP_IMAGE_ID
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: bootstrap-with-server-X86_64
+          path: lambda-with-server/bootstrap
+          if-no-files-found: error
+          retention-days: 1
+
+  build-directly:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      # TODO: Build ARM_64 version.
+      - name: Build Apollo Router Lambda
+        uses: docker/build-push-action@v5
+        with:
+          context: lambda-directly
+          load: true
+          tags: lambda
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Extract bootstrap file
+        working-directory: lambda-directly
+        run: |
+          export TMP_IMAGE_ID=$(docker create lambda)
+          docker cp $TMP_IMAGE_ID:/dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap bootstrap
+          docker rm -v $TMP_IMAGE_ID
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: bootstrap-directly-X86_64
+          path: lambda-directly/bootstrap
+          if-no-files-found: error
+          retention-days: 1
+
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup artifact directory
+        run: mkdir -p ./release-artifacts
+
+      # Download all artifacts from previous jobs.
+      - uses: actions/download-artifact@v3
+        with:
+          path: ./release-artifacts/
+
+      - name: Get short git SHA
+        id: git-sha
+        run: |
+          echo "short=${GITHUB_SHA::10}" >> $GITHUB_OUTPUT
+
+      - uses: ncipollo/release-action@v1.13.0
+        with:
+          artifacts: "release-artifacts/bootstrap-with-server-X86_64,release-artifacts/bootstrap-directly-X86_64"
+          # Automatically create the tag from the commit if it doesn't exist.
+          tag: ${{ steps.git-sha.outputs.short }}
+          commit: ${{ github.sha }}
+          name: "Release ${{ steps.git-sha.outputs.short }}"
+          # Automatically generate the release notes, which can be configured. See more here
+          generateReleaseNotes: true
+          # Mark the deployment as the latest.
+          makeLatest: true
