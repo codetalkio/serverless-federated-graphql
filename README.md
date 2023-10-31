@@ -96,4 +96,39 @@ Both of these examples talk to 1 warm subgraph implemented in Rust, to simulate 
 <img width="1637" alt="Lambda Router Warm (Products query) Screenshot 2023-10-31 at 20 41 43" src="https://github.com/codetalkio/apollo-router-lambda/assets/1189998/b9b8e456-d32e-4c0a-b1e4-72cb7c9cbe9c">
 
 
+# Comparison: Rust Subgraph in AWS Lambda
+
+For comparison so that you know how far we _could_ go, here's a subgraph in Rust implemented using [async-graphql](https://github.com/async-graphql/async-graphql) and wrapped up in [cargo-lambda](https://www.cargo-lambda.info/).
+
+Cold Start (201ms):
+
+<img width="1411" alt="Screenshot 2023-10-21 at 12 13 18" src="https://github.com/codetalkio/apollo-router-lambda/assets/1189998/e561ce43-ffd3-4ef3-bb95-8d5619035f37">
+
+
+Warm Start (8ms): 
+
+<img width="1411" alt="Screenshot 2023-10-21 at 12 14 41" src="https://github.com/codetalkio/apollo-router-lambda/assets/1189998/f71beb7f-b210-46ec-80ea-fc0de86f9581">
+
+
+# Comparison: Federation via Apollo Gateway
+
+To have something to compare the Apollo Router PoC more directly against, here's one alternative using [Apollo Gateway](https://www.apollographql.com/docs/apollo-server/using-federation/apollo-gateway-setup).
+
+Cold start (1.23ms): 
+
+<img width="1350" alt="Cold start ms-gateway Screenshot 2023-10-22 at 21 45 34" src="https://github.com/codetalkio/apollo-router-lambda/assets/1189998/d8958d82-529a-4b63-98c9-db90b06f0fe2">
+
+
+Warm start (120ms): 
+
+<img width="1412" alt="Warm start subgraph times Screenshot 2023-10-22 at 16 13 26" src="https://github.com/codetalkio/apollo-router-lambda/assets/1189998/577d8e5b-afc6-4d2f-b22c-7b61f94a473d">
+
+
+# Comparison: Federation via GraphQL Mesh
+
+Another comparison point against the Apollo Router PoC, here's one alternative using [GraphQL Mesh](https://the-guild.dev/graphql/mesh).
+
+Cold start (956ms): 
+
+<img width="1352" alt="Cold start ms-mesh Screenshot 2023-10-22 at 21 42 45" src="https://github.com/codetalkio/apollo-router-lambda/assets/1189998/686ee42b-0371-420c-adbd-facbe640f155">
 
