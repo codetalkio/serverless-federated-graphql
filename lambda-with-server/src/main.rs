@@ -47,13 +47,7 @@ async fn handle_request(event: Request) -> Result<impl IntoResponse, Error> {
     Ok((status, payload))
 }
 
-async fn start_router() -> Result<(), Error> {
-    let config_path = env::var("APOLLO_ROUTER_CONFIG_PATH").unwrap_or("./router.yaml".to_string());
-    let schema_path =
-        env::var("APOLLO_ROUTER_SUPERGRAPH_PATH").unwrap_or("./supergraph.graphql".to_string());
-    let config = fs::read_to_string(config_path)?;
-    let schema = fs::read_to_string(schema_path)?;
-    let configuration = serde_yaml::from_str::<Configuration>(&config).unwrap();
+async fn start_router(schema: String, configuration: Configuration) -> Result<(), Error> {
     RouterHttpServer::builder()
         .configuration(configuration)
         .schema(schema)
@@ -63,8 +57,16 @@ async fn start_router() -> Result<(), Error> {
 }
 
 async fn handler() -> Result<(), Error> {
+    // Load configurations during the init phase of the Lambda.
+    let config_path = env::var("APOLLO_ROUTER_CONFIG_PATH").unwrap_or("./router.yaml".to_string());
+    let schema_path =
+        env::var("APOLLO_ROUTER_SUPERGRAPH_PATH").unwrap_or("./supergraph.graphql".to_string());
+    let config = fs::read_to_string(config_path)?;
+    let schema = fs::read_to_string(schema_path)?;
+    let configuration = serde_yaml::from_str::<Configuration>(&config).unwrap();
+
     // Start a local Apollo Router server.
-    tokio::spawn(async move { start_router().await });
+    tokio::spawn(async move { start_router(schema, configuration).await });
 
     // Set up the Lambda event handler.
     run(service_fn(|event: Request| async { handle_request(event).await })).await
