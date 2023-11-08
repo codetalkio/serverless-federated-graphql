@@ -15,7 +15,31 @@ async fn handle_request(event: Request) -> Result<impl IntoResponse, Error> {
         env::var("APOLLO_ROUTER_SUPERGRAPH_PATH").unwrap_or("./supergraph.graphql".to_string());
     let config = fs::read_to_string(config_path)?;
     let schema = fs::read_to_string(schema_path)?;
-    let configuration = serde_yaml::from_str::<Configuration>(&config).unwrap();
+
+    // Before we cast the Router YAML configuration to a strongly typed struct, we need to
+    // manually handle any environment variables that are used in the configuration. This is
+    // normally handled by the regular Router, but is missing when manually loading the config.
+    let mut untyped_config = serde_yaml::from_str::<serde_yaml::Value>(&config).unwrap();
+    if let Some(map) = untyped_config.as_mapping_mut() {
+        if let Some(serde_yaml::Value::Mapping(ref mut nested_map)) =
+            map.get_mut(&serde_yaml::Value::from("override_subgraph_url"))
+        {
+            for (_key, nested_value) in nested_map.iter_mut() {
+                // Remove any env. parts of the string, which is specific to the Apollo configuration
+                // format (e.g. "${env.SUBGRAPH_USERS_URL:-http://127.0.0.1:3065/}").
+                let subgraph_override =
+                    serde_yaml::to_string(nested_value).unwrap().replace("${env.", "${");
+                // Expand any environment variables, and fallbacks, using the shell environment.
+                let expanded_env = shellexpand::env(&subgraph_override).unwrap();
+                // Replace the current original value with the expanded value.
+                *nested_value = serde_yaml::Value::from(expanded_env);
+            }
+        }
+    }
+
+    // We can finally convert our untyped YAML configuration into a strongly typed Configuration
+    // struct.
+    let configuration = serde_yaml::from_value::<Configuration>(untyped_config).unwrap();
 
     let body = event.body();
     // let event_payload = std::str::from_utf8(body).expect("invalid utf-8 sequence");
