@@ -1,0 +1,31 @@
+[package]
+name = "apollo-router-lambda"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[features]
+# Can be checked using: #[cfg(feature = "local")]
+local = []
+
+[dependencies]
+# The Apollo Router.
+apollo-router = "1.33.1"
+tower = "0.4.13"
+reqwest = { version = "0.11.22", default-features = false, features = [
+  "rustls",
+  "json",
+] }
+
+# Using AWS services.
+tokio = { version = "1.33.0", features = ["macros", "process"] }
+lambda_http = "0.8.1"
+lambda_runtime = "0.8.1"
+
+# Utilities.
+simple-error = "0.3.0"
+serde_json = "1"
+serde_yaml = "0.9"
+serde = { version = "1", features = ["derive"] }
+tracing = "0.1.37"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
