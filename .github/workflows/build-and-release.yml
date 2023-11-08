@@ -5,6 +5,7 @@ on:
     paths:
       - "lambda-with-server/**"
       - "lambda-directly/**"
+      - "lambda-directly-optimized/**"
       - ".github/workflows/release.yml"
 
 defaults:
