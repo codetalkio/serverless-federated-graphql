@@ -82,29 +82,24 @@ async fn handler() -> Result<(), Error> {
     let configuration = serde_yaml::from_value::<Configuration>(untyped_config).unwrap();
 
     // We set up the supergraph during the initialization of the Lambda, and reuse
-    // it across invocations. It needs to be a Mutex because we need to be able to
-    // to mutate it from within the Lambda handler.
-    let supergraph = Arc::new(Mutex::new(
-        TestHarness::builder()
-            .configuration(Arc::new(configuration))
-            .schema(&schema)
-            // Without this all subgraphs get an empty response by default.
-            .with_subgraph_network_requests()
-            .build_router()
-            .await?,
-    ));
+    // it across invocations.
+    let mut supergraph = TestHarness::builder()
+        .configuration(Arc::new(configuration))
+        .schema(&schema)
+        // Without this all subgraphs get an empty response by default.
+        .with_subgraph_network_requests()
+        .build_router()
+        .await?;
 
     // Wait until the service is ready via ServiceExt::ready. This keeps us in the initialization
     // phase, which typically has more resources allocated to it.
-    {
-        let mut s = supergraph.lock().unwrap();
-        s.ready().await?;
-    }
+    supergraph.ready().await?;
 
-    // Set up the Lambda event handler, and Arc clone our supergraph so we can safely
-    // pass it across async boundaries.
+    // Set up the Lambda event handler, wrap our supergraph in Arc(Mutex(..)), and so
+    // we can safely pass it across async boundaries.
+    let shared_supergraph = Arc::new(Mutex::new(supergraph));
     run(service_fn(|event: Request| async {
-        let s = Arc::clone(&supergraph);
+        let s = Arc::clone(&shared_supergraph);
         handle_request(s, event).await
     }))
     .await
