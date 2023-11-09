@@ -73,7 +73,7 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  build-directly-optimized:
+  build-directly-optimized-arm:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -86,7 +86,7 @@ jobs:
           context: lambda-directly-optimized
           load: true
           tags: lambda
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -98,11 +98,33 @@ jobs:
           docker cp $TMP_IMAGE_ID:/dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap arm/bootstrap
           docker rm -v $TMP_IMAGE_ID
 
+      - uses: actions/upload-artifact@v3
+        with:
+          name: directly-optimized-arm
+          path: lambda-directly-optimized/arm/bootstrap
+          if-no-files-found: error
+          retention-days: 1
+
+  build-directly-optimized-x86:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build Apollo Router Lambda
+        uses: docker/build-push-action@v5
+        with:
+          context: lambda-directly-optimized
+          load: true
+          tags: lambda
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
       - name: Extract x86 bootstrap file
         working-directory: lambda-directly-optimized
         run: |
           mkdir -p x86
-          export TMP_IMAGE_ID=$(docker create --platform linux/amd64 lambda)
+          export TMP_IMAGE_ID=$(docker create lambda)
           docker cp $TMP_IMAGE_ID:/dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap x86/bootstrap
           docker rm -v $TMP_IMAGE_ID
 
@@ -113,16 +135,15 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-      - uses: actions/upload-artifact@v3
-        with:
-          name: directly-optimized-arm
-          path: lambda-directly-optimized/arm/bootstrap
-          if-no-files-found: error
-          retention-days: 1
-
   release:
     runs-on: ubuntu-latest
-    needs: [build-with-server, build-directly, build-directly-optimized]
+    needs:
+      [
+        build-with-server,
+        build-directly,
+        build-directly-optimized-arm,
+        build-directly-optimized-x86,
+      ]
     steps:
       - uses: actions/checkout@v4
 

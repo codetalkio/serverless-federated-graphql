@@ -4,9 +4,15 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 
-[features]
-# Can be checked using: #[cfg(feature = "local")]
-local = []
+# Configurations explicitly listed here for clarity, using the best options for performance.
+# - https://doc.rust-lang.org/cargo/reference/profiles.html#default-profiles
+# - https://github.com/johnthagen/min-sized-rust
+[profile.release]
+opt-level = 3     # Optimize for speed.
+lto = true        # Enable Link Time Optimization
+codegen-units = 1 # Reduce Parallel Code Generation Units to Increase Optimization.
+strip = true      # Automatically strip symbols from the binary.
+debug = false
 
 [dependencies]
 # The Apollo Router.
