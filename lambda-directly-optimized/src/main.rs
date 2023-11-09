@@ -6,7 +6,6 @@ use std::env;
 use std::fs;
 use std::sync::{Arc, Mutex};
 use tower::Service;
-use tower::ServiceExt;
 use tracing::info;
 
 async fn handle_request(
@@ -83,7 +82,7 @@ async fn handler() -> Result<(), Error> {
 
     // We set up the supergraph during the initialization of the Lambda, and reuse
     // it across invocations.
-    let mut supergraph = TestHarness::builder()
+    let supergraph = TestHarness::builder()
         .configuration(Arc::new(configuration))
         .schema(&schema)
         // Without this all subgraphs get an empty response by default.

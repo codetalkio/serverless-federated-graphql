@@ -35,4 +35,5 @@ COPY . /dist/apollo-router-lambda
 
 # Build our lambda bootstrap binary. The release artifact can be found at:
 # /dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap
-RUN export PATH="$HOME/.cargo/bin:$PATH"; export RUSTFLAGS="-Ctarget-feature=+lse -Ctarget-cpu=neoverse-n1 -Ctarget-cpu=neoverse-n1"; cargo lambda build --compiler cargo --release
+# RUN export PATH="$HOME/.cargo/bin:$PATH"; export RUSTFLAGS="-Ctarget-feature=+lse -Ctarget-cpu=neoverse-n1 -Ctarget-cpu=neoverse-n1"; cargo lambda build --compiler cargo --release
+RUN export PATH="$HOME/.cargo/bin:$PATH"; cargo lambda build --compiler cargo --release
