@@ -40,6 +40,6 @@ traffic_shaping:
 # ones defined in the composed supergraph.graphql schema. See more at
 # https://www.apollographql.com/docs/router/configuration/overview/#subgraph-routing-urls.
 override_subgraph_url:
-  users: "${env.SUBGRAPH_USERS_URL:-http://127.0.0.1:3065/}"
-  products: "${env.SUBGRAPH_PRODUCTS_URL:-http://127.0.0.1:3075/}"
-  reviews: "${env.SUBGRAPH_REVIEWS_URL:-http://127.0.0.1:3085/}"
+  users: '${env.SUBGRAPH_USERS_URL:-http://127.0.0.1:3065/}'
+  products: '${env.SUBGRAPH_PRODUCTS_URL:-http://127.0.0.1:3075/}'
+  reviews: '${env.SUBGRAPH_REVIEWS_URL:-http://127.0.0.1:3085/}'

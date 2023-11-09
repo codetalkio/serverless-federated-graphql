@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
 
       # TODO: Build ARM_64 version.
@@ -29,7 +30,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Extract bootstrap file
+      - name: Extract x86 bootstrap file
         working-directory: lambda-with-server
         run: |
           export TMP_IMAGE_ID=$(docker create lambda)
@@ -79,27 +80,43 @@ jobs:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
 
-      # TODO: Build ARM_64 version.
       - name: Build Apollo Router Lambda
         uses: docker/build-push-action@v5
         with:
           context: lambda-directly-optimized
           load: true
           tags: lambda
+          platforms: linux/amd64,linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Extract bootstrap file
+      - name: Extract ARM bootstrap file
         working-directory: lambda-directly-optimized
         run: |
-          export TMP_IMAGE_ID=$(docker create lambda)
-          docker cp $TMP_IMAGE_ID:/dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap bootstrap
+          mkdir -p arm
+          export TMP_IMAGE_ID=$(docker create --platform linux/arm64 lambda)
+          docker cp $TMP_IMAGE_ID:/dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap arm/bootstrap
+          docker rm -v $TMP_IMAGE_ID
+
+      - name: Extract x86 bootstrap file
+        working-directory: lambda-directly-optimized
+        run: |
+          mkdir -p x86
+          export TMP_IMAGE_ID=$(docker create --platform linux/amd64 lambda)
+          docker cp $TMP_IMAGE_ID:/dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap x86/bootstrap
           docker rm -v $TMP_IMAGE_ID
 
       - uses: actions/upload-artifact@v3
         with:
           name: directly-optimized-x86-64
-          path: lambda-directly-optimized/bootstrap
+          path: lambda-directly-optimized/x86/bootstrap
+          if-no-files-found: error
+          retention-days: 1
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: directly-optimized-arm
+          path: lambda-directly-optimized/arm/bootstrap
           if-no-files-found: error
           retention-days: 1
 
@@ -122,6 +139,7 @@ jobs:
           mv release-artifacts/with-server-x86-64/bootstrap release-artifacts/bootstrap-with-server-x86-64
           mv release-artifacts/directly-x86-64/bootstrap release-artifacts/bootstrap-directly-x86-64
           mv release-artifacts/directly-optimized-x86-64/bootstrap release-artifacts/bootstrap-directly-optimized-x86-64
+          mv release-artifacts/directly-optimized-arm/bootstrap release-artifacts/bootstrap-directly-optimized-arm
 
       - name: Set release info
         id: info
@@ -131,7 +149,7 @@ jobs:
 
       - uses: ncipollo/release-action@v1.13.0
         with:
-          artifacts: "release-artifacts/bootstrap-with-server-x86-64,release-artifacts/bootstrap-directly-x86-64,release-artifacts/bootstrap-directly-optimized-x86-64"
+          artifacts: "release-artifacts/bootstrap-with-server-x86-64,release-artifacts/bootstrap-directly-x86-64,release-artifacts/bootstrap-directly-optimized-x86-64,release-artifacts/bootstrap-directly-optimized-arm"
           # Automatically create the tag from the commit if it doesn't exist.
           tag: ${{ steps.info.outputs.tag-name }}
           commit: ${{ github.sha }}
