@@ -1,4 +1,6 @@
-FROM amazon/aws-lambda-provided:al2023-preview.2023.10.24.14 as builder
+# FROM amazon/aws-lambda-provided:al2 as builder
+# FROM amazon/aws-lambda-provided:al2023.2023.11.01.15 as builder
+FROM public.ecr.aws/lambda/provided:al2-arm64 as builder
 ARG RUST_VERSION=1.72.0
 
 RUN yum install -y jq openssl-devel gcc wget tar gzip unzip \
