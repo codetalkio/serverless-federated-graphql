@@ -93,7 +93,7 @@ async fn handler() -> Result<(), Error> {
 
     // Wait until the service is ready via ServiceExt::ready. This keeps us in the initialization
     // phase, which typically has more resources allocated to it.
-    supergraph.ready().await?;
+    // supergraph.ready().await?;
 
     // Set up the Lambda event handler, wrap our supergraph in Arc(Mutex(..)), and so
     // we can safely pass it across async boundaries.

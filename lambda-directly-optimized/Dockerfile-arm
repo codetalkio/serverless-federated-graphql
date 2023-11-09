@@ -15,15 +15,15 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v3.5.1/cmake-3.5.1.t
   && make install
 
 # Install profobuf (used by apollo-router).
-RUN curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v3.15.8/protoc-3.15.8-linux-x86_64.zip \
-  && unzip protoc-3.15.8-linux-x86_64.zip -d .\
+RUN curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v3.15.8/protoc-3.15.8-linux-aarch_64.zip  \
+  && unzip protoc-3.15.8-linux-aarch_64.zip  -d .\
   # Protobuf expects its "include" directory to be in the same directory as the binary.
   && mv bin/protoc /usr/local/bin/protoc \
   && mv include /usr/local/bin/include
 
 # Fetch the cargo-lambda binary.
-RUN curl -LO https://github.com/cargo-lambda/cargo-lambda/releases/download/v0.22.0/cargo-lambda-v0.22.0.x86_64-unknown-linux-musl.tar.gz \
-  && tar -xvf cargo-lambda-v0.22.0.x86_64-unknown-linux-musl.tar.gz \
+RUN curl -LO https://github.com/cargo-lambda/cargo-lambda/releases/download/v0.22.0/cargo-lambda-v0.22.0.aarch64-unknown-linux-musl.tar.gz \
+  && tar -xvf cargo-lambda-v0.22.0.aarch64-unknown-linux-musl.tar.gz \
   && chmod +x cargo-lambda \
   && mv cargo-lambda $HOME/.cargo/bin/cargo-lambda
 
