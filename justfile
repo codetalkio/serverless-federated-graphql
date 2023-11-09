@@ -8,7 +8,21 @@ help:
 code:
   @ code .
 
+# Install tooling for working with The Stack.
+[linux]
 install-tooling:
+  sudo apt-get update
+  sudo apt-get install -y --no-install-recommends qemu-user-static binfmt-support
+  sudo update-binfmts --enable qemu-arm
+  sudo update-binfmts --display qemu-arm
+  @ just _install-tooling-all-platforms
+
+# Install tooling for working with The Stack.
+[macos]
+install-tooling:
+  @ just _install-tooling-all-platforms
+
+_install-tooling-all-platforms:
   # Install bun.
   command -v bun >/dev/null 2>&1 || curl -fsSL https://bun.sh/install | bash
   # Install the zig compiler for cross-compilation.
