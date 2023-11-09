@@ -84,7 +84,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: lambda-directly-optimized
-          file: Dockerfile-arm
+          file: lambda-directly-optimized/Dockerfile-arm
           load: true
           tags: lambda
           platforms: linux/arm64
@@ -116,7 +116,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: lambda-directly-optimized
-          file: Dockerfile-x86
+          file: lambda-directly-optimized/Dockerfile-x86
           load: true
           tags: lambda
           cache-from: type=gha
