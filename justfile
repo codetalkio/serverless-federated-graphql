@@ -11,10 +11,15 @@ code:
 # Install tooling for working with The Stack.
 [linux]
 install-tooling:
+  # Install QEMU packages.
   sudo apt-get update
-  sudo apt-get install -y --no-install-recommends qemu-user-static binfmt-support
+  sudo apt-get install -y qemu-user-static binfmt-support
   sudo update-binfmts --enable qemu-arm
   sudo update-binfmts --display qemu-arm
+  # This step will execute the registering scripts.
+  docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+  # Testing the emulation environment.
+  docker run --rm -t arm64v8/ubuntu uname -m
   @ just _install-tooling-all-platforms
 
 # Install tooling for working with The Stack.
