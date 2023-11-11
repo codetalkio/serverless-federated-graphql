@@ -2,7 +2,7 @@
 
 > Minimal/scrappy build of Apollo Router built for Lambda via Amazon Linux 2.
 
-**TL;DR**: The `lambda-directly-optimized` beats all alternatives for Cold and Warm Starts.
+**TL;DR**: The `lambda-directly-optimized` beats all alternatives for Cold and Warm Starts (use the `bootstrap-directly-optimized-graviton-arm` binary).
 
 Currently [Apollo Router](https://github.com/apollographql/router) does not support running in AWS Lambda (https://github.com/apollographql/router/issues/364). Instead it's focusing on running as a long-lived process, which means that it's less optimized for quick startup, as well as built with dependencies that does not mesh with Lambda's Amazon Linux 2 environment.
 
@@ -12,7 +12,7 @@ This repository contains two examples:
 
 - `lambda-with-server/`: Spins up a Apollo Router using the [apollo-router crate](), and proxies Lambda Events to the HTTP server locally.
 - `lambda-directly/`: Uses the [TestHarness](https://github.com/apollographql/router/blob/a6f129cdb75038eae6437e24876723194aeaf165/apollo-router/src/test_harness.rs#L38-L78) that Apollo Router uses to easily make GraphQL requests in its tests without needing a full Router. The Lambda takes the incoming event, runs it through the `TestHarness` and returns the result.
-- `lambda-directly-optimized`: Same approach as `lambda-directly`, but we only construct the [TestHarness](https://github.com/codetalkio/apollo-router-lambda/blob/a0899105794b50a7c9ab200131a8b45266328e96/lambda-directly-optimized/src/main.rs#L85-L91) once and then reuse it across all invocations. We also optimize loading configurations as well as initializing the Supergraph by doing it during [Lambda's Initialization phase](https://hichaelmart.medium.com/shave-99-93-off-your-lambda-bill-with-this-one-weird-trick-33c0acebb2ea), which runs at full resource. Additionally, we buid this for the ARM architecture and also optimize it for the AWS Graviton CPU.
+- `lambda-directly-optimized/`: Same approach as `lambda-directly`, but we only construct the [TestHarness](https://github.com/codetalkio/apollo-router-lambda/blob/a0899105794b50a7c9ab200131a8b45266328e96/lambda-directly-optimized/src/main.rs#L85-L91) once and then reuse it across all invocations. We also optimize loading configurations as well as initializing the Supergraph by doing it during [Lambda's Initialization phase](https://hichaelmart.medium.com/shave-99-93-off-your-lambda-bill-with-this-one-weird-trick-33c0acebb2ea), which runs at full resource. Additionally, we buid this for the ARM architecture and also optimize it for the AWS Graviton CPU.
 
 Check out the code and `Dockerfile` for each. There's really not a lot going on, and it is a minimal implementation compared to what you'd want in Production. My current recommendation would be either use the `bootstrap-directly-optimized-graviton-arm` binary produced from the `lambda-directly-optimized` approach in AWS Lambda, or to run Apollo Router in App Runner, which it does extremely well (I can max out the allowed 200 concurrent requests on a 0.25 CPU and 0.5GB Memory setting).
 
@@ -50,7 +50,7 @@ First we create a folder to hold our artifacts in, which we will .zip up and dep
 $ mkdir apollo-router
 ```
 
-Then we download the relevant 
+Then we download the relevant
 
 ```bash
 $ curl -sSL https://github.com/codetalkio/apollo-router-lambda/releases/latest/download/bootstrap-directly-optimized-graviton-arm -o bootstrap
@@ -138,7 +138,7 @@ Cold Start (201ms):
 <img width="1411" alt="Screenshot 2023-10-21 at 12 13 18" src="https://github.com/codetalkio/apollo-router-lambda/assets/1189998/e561ce43-ffd3-4ef3-bb95-8d5619035f37">
 
 
-Warm Start (8ms): 
+Warm Start (8ms):
 
 <img width="1411" alt="Screenshot 2023-10-21 at 12 14 41" src="https://github.com/codetalkio/apollo-router-lambda/assets/1189998/f71beb7f-b210-46ec-80ea-fc0de86f9581">
 
@@ -147,12 +147,12 @@ Warm Start (8ms):
 
 To have something to compare the Apollo Router PoC more directly against, here's one alternative using [Apollo Gateway](https://www.apollographql.com/docs/apollo-server/using-federation/apollo-gateway-setup).
 
-Cold start (1.23ms): 
+Cold start (1.23ms):
 
 <img width="1350" alt="Cold start ms-gateway Screenshot 2023-10-22 at 21 45 34" src="https://github.com/codetalkio/apollo-router-lambda/assets/1189998/d8958d82-529a-4b63-98c9-db90b06f0fe2">
 
 
-Warm start (120ms): 
+Warm start (120ms):
 
 <img width="1412" alt="Warm start subgraph times Screenshot 2023-10-22 at 16 13 26" src="https://github.com/codetalkio/apollo-router-lambda/assets/1189998/577d8e5b-afc6-4d2f-b22c-7b61f94a473d">
 
@@ -161,7 +161,6 @@ Warm start (120ms):
 
 Another comparison point against the Apollo Router PoC, here's one alternative using [GraphQL Mesh](https://the-guild.dev/graphql/mesh).
 
-Cold start (956ms): 
+Cold start (956ms):
 
 <img width="1352" alt="Cold start ms-mesh Screenshot 2023-10-22 at 21 42 45" src="https://github.com/codetalkio/apollo-router-lambda/assets/1189998/686ee42b-0371-420c-adbd-facbe640f155">
-

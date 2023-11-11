@@ -30,6 +30,9 @@ RUN curl -LO https://github.com/cargo-lambda/cargo-lambda/releases/download/v0.2
 WORKDIR /dist/apollo-router-lambda
 COPY . /dist/apollo-router-lambda
 
+
 # Build our lambda bootstrap binary. The release artifact can be found at:
 # /dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap
-RUN export PATH="$HOME/.cargo/bin:$PATH"; cargo lambda build --compiler cargo --release
+# NOTE: We add additional ARM/Graviton2 specific flags to the build process. See more at
+# https://github.com/aws/aws-graviton-getting-started/blob/main/rust.md.
+RUN export PATH="$HOME/.cargo/bin:$PATH"; export RUSTFLAGS="-Ctarget-feature=+lse -Ctarget-cpu=neoverse-n1"; cargo lambda build --compiler cargo --release
