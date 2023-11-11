@@ -10,4 +10,4 @@ target/
 *.pdb
 
 .env
-bootstrap
+bootstrap*
