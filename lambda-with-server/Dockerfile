@@ -44,7 +44,7 @@ RUN export PATH="$HOME/.cargo/bin:$PATH"; \
     rm target/lambda/apollo-router-lambda/bootstrap
 
 # Copy our actual application code and build this.
-COPY src /dist/apollo-router-lambda/src
+COPY src/main.rs /dist/apollo-router-lambda/src/main.rs
 
 # Build our lambda bootstrap binary. The release artifact can be found at:
 # /dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap

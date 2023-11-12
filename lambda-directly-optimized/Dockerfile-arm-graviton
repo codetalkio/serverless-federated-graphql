@@ -48,10 +48,10 @@ RUN export PATH="$HOME/.cargo/bin:$PATH"; \
   rm target/lambda/apollo-router-lambda/bootstrap
 
 # Copy our actual application code and build this.
-COPY src /dist/apollo-router-lambda/src
+COPY src/main.rs /dist/apollo-router-lambda/src/main.rs
 
 # Build our lambda bootstrap binary. The release artifact can be found at:
 # /dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap
 # NOTE: We add additional ARM/Graviton2 specific flags to the build process. See more at
 # https://github.com/aws/aws-graviton-getting-started/blob/main/rust.md.
-RUN export PATH="$HOME/.cargo/bin:$PATH"; export RUSTFLAGS="-Ctarget-feature=+lse -Ctarget-cpu=neoverse-n1 -Zlocation-detail=none -Zthreads=8"; cargo lambda build --compiler cargo -Z build-std=std --target $TARGET --release
+RUN export PATH="$HOME/.cargo/bin:$PATH"; export RUSTFLAGS="-Ctarget-feature=+lse -Ctarget-cpu=neoverse-n1 -Zlocation-detail=none -Zthreads=8"; cat src/main.rs; cargo lambda build --compiler cargo -Z build-std=std --target $TARGET --release
