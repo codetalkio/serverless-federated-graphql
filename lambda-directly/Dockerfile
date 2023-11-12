@@ -34,7 +34,14 @@ WORKDIR /dist/apollo-router-lambda
 COPY Cargo.toml /dist/apollo-router-lambda/Cargo.toml
 COPY Cargo.lock /dist/apollo-router-lambda/Cargo.lock
 COPY scaffold.rs /dist/apollo-router-lambda/src/main.rs
-RUN export PATH="$HOME/.cargo/bin:$PATH"; cargo lambda build --compiler cargo --release; rm -r src; target/lambda/apollo-router-lambda/bootstrap
+RUN export PATH="$HOME/.cargo/bin:$PATH"; \
+    export AWS_LAMBDA_FUNCTION_NAME="_"; \
+    export AWS_LAMBDA_FUNCTION_VERSION=1; \
+    export AWS_LAMBDA_FUNCTION_MEMORY_SIZE=1024; \
+    export AWS_LAMBDA_RUNTIME_API=http://[::]:9000/.rt; \
+    cargo lambda build --compiler cargo --release; \
+    rm -r src; \
+    rm target/lambda/apollo-router-lambda/bootstrap
 
 # Copy our actual application code and build this.
 COPY src /dist/apollo-router-lambda/src
