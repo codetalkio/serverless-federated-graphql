@@ -5,8 +5,6 @@ ARG TARGET=aarch64-unknown-linux-gnu
 
 RUN yum install -y jq openssl-devel gcc wget tar gzip unzip \
   && yum group install -y "Development Tools"
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
-  | sh -s -- -y --profile minimal --default-toolchain $RUST_VERSION
 
 # Install a recent cmake.
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.5.1/cmake-3.5.1.tar.gz \
@@ -22,6 +20,9 @@ RUN curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v3.15
   # Protobuf expects its "include" directory to be in the same directory as the binary.
   && mv bin/protoc /usr/local/bin/protoc \
   && mv include /usr/local/bin/include
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+  | sh -s -- -y --profile minimal --default-toolchain $RUST_VERSION
 
 # Fetch the cargo-lambda binary.
 RUN curl -LO https://github.com/cargo-lambda/cargo-lambda/releases/download/v0.22.0/cargo-lambda-v0.22.0.aarch64-unknown-linux-musl.tar.gz \
