@@ -48,4 +48,7 @@ COPY src/main.rs /dist/apollo-router-lambda/src/main.rs
 
 # Build our lambda bootstrap binary. The release artifact can be found at:
 # /dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap
-RUN export PATH="$HOME/.cargo/bin:$PATH"; cargo lambda build --compiler cargo --release
+RUN export PATH="$HOME/.cargo/bin:$PATH"; \
+    # Delete the previously generated main.rs artifacts.
+    rm -r target/x86_64-unknown-linux-gnu/release/deps/apollo_router_lambda*; \
+    cargo lambda build --compiler cargo --release

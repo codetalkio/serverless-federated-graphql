@@ -54,4 +54,8 @@ COPY src/main.rs /dist/apollo-router-lambda/src/main.rs
 # /dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap
 # NOTE: We add additional ARM/Graviton2 specific flags to the build process. See more at
 # https://github.com/aws/aws-graviton-getting-started/blob/main/rust.md.
-RUN export PATH="$HOME/.cargo/bin:$PATH"; export RUSTFLAGS="-Ctarget-feature=+lse -Ctarget-cpu=neoverse-n1 -Zlocation-detail=none -Zthreads=8"; cat src/main.rs; cargo lambda build --compiler cargo -Z build-std=std --target $TARGET --release
+RUN export PATH="$HOME/.cargo/bin:$PATH"; \
+    export RUSTFLAGS="-Ctarget-feature=+lse -Ctarget-cpu=neoverse-n1 -Zlocation-detail=none -Zthreads=8"; \
+    # Delete the previously generated main.rs artifacts.
+    rm -r target/$TARGET/release/deps/apollo_router_lambda*; \
+    cargo lambda build --compiler cargo -Z build-std=std --target $TARGET --release

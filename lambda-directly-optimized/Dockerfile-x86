@@ -54,4 +54,6 @@ COPY src/main.rs /dist/apollo-router-lambda/src/main.rs
 # /dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap
 RUN export PATH="$HOME/.cargo/bin:$PATH"; \
   export RUSTFLAGS="-Zlocation-detail=none -Zthreads=8"; \
+  # Delete the previously generated main.rs artifacts.
+  rm -r target/$TARGET/release/deps/apollo_router_lambda*; \
   cargo lambda build --compiler cargo -Z build-std=std --target $TARGET --release
