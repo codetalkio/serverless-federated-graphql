@@ -36,7 +36,7 @@ WORKDIR /dist/apollo-router-lambda
 COPY Cargo.toml /dist/apollo-router-lambda/Cargo.toml
 COPY Cargo.lock /dist/apollo-router-lambda/Cargo.lock
 COPY scaffold.rs /dist/apollo-router-lambda/src/main.rs
-RUN export PATH="$HOME/.cargo/bin:$PATH"; export RUSTFLAGS="-Ctarget-feature=+lse -Ctarget-cpu=neoverse-n1 -Zlocation-detail=none"; cargo +$RUST_VERSION lambda build --compiler cargo -Z build-std=std -Z threads=8 --target $TARGET --release; rm -r src; target/lambda/apollo-router-lambda/bootstrap
+RUN export PATH="$HOME/.cargo/bin:$PATH"; export RUSTFLAGS="-Ctarget-feature=+lse -Ctarget-cpu=neoverse-n1 -Zlocation-detail=none -Zthreads=8"; cargo +$RUST_VERSION lambda build --compiler cargo -Z build-std=std --target $TARGET --release; rm -r src; target/lambda/apollo-router-lambda/bootstrap
 
 # Copy our actual application code and build this.
 COPY src /dist/apollo-router-lambda/src
@@ -45,4 +45,4 @@ COPY src /dist/apollo-router-lambda/src
 # /dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap
 # NOTE: We add additional ARM/Graviton2 specific flags to the build process. See more at
 # https://github.com/aws/aws-graviton-getting-started/blob/main/rust.md.
-RUN export PATH="$HOME/.cargo/bin:$PATH"; export RUSTFLAGS="-Ctarget-feature=+lse -Ctarget-cpu=neoverse-n1 -Zlocation-detail=none"; cargo +$RUST_VERSION lambda build --compiler cargo -Z build-std=std -Z threads=8 --target $TARGET --release
+RUN export PATH="$HOME/.cargo/bin:$PATH"; export RUSTFLAGS="-Ctarget-feature=+lse -Ctarget-cpu=neoverse-n1 -Zlocation-detail=none -Zthreads=8"; cargo +$RUST_VERSION lambda build --compiler cargo -Z build-std=std --target $TARGET --release
