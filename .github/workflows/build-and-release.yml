@@ -73,56 +73,91 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  build-directly-optimized-arm:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
+  # build-directly-optimized-arm:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: docker/setup-qemu-action@v3
+  #     - uses: docker/setup-buildx-action@v3
 
-      - name: Build Apollo Router Lambda
-        uses: docker/build-push-action@v5
-        with:
-          context: lambda-directly-optimized
-          file: lambda-directly-optimized/Dockerfile-arm
-          load: true
-          tags: lambda
-          platforms: linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+  #     - name: Build Apollo Router Lambda
+  #       uses: docker/build-push-action@v5
+  #       with:
+  #         context: lambda-directly-optimized
+  #         file: lambda-directly-optimized/Dockerfile-arm
+  #         load: true
+  #         tags: lambda
+  #         platforms: linux/arm64
+  #         cache-from: type=gha
+  #         cache-to: type=gha,mode=max
 
-      - name: Extract ARM bootstrap file
-        working-directory: lambda-directly-optimized
-        run: |
-          mkdir -p arm
-          export TMP_IMAGE_ID=$(docker create --platform linux/arm64 lambda)
-          docker cp $TMP_IMAGE_ID:/dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap arm/bootstrap
-          docker rm -v $TMP_IMAGE_ID
+  #     - name: Extract ARM bootstrap file
+  #       working-directory: lambda-directly-optimized
+  #       run: |
+  #         mkdir -p arm
+  #         export TMP_IMAGE_ID=$(docker create --platform linux/arm64 lambda)
+  #         docker cp $TMP_IMAGE_ID:/dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap arm/bootstrap
+  #         docker rm -v $TMP_IMAGE_ID
 
-      - uses: actions/upload-artifact@v3
-        with:
-          name: directly-optimized-arm
-          path: lambda-directly-optimized/arm/bootstrap
-          if-no-files-found: error
-          retention-days: 1
+  #     - uses: actions/upload-artifact@v3
+  #       with:
+  #         name: directly-optimized-arm
+  #         path: lambda-directly-optimized/arm/bootstrap
+  #         if-no-files-found: error
+  #         retention-days: 1
+
+  # build-directly-optimized-arm-graviton:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: docker/setup-qemu-action@v3
+  #     - uses: docker/setup-buildx-action@v3
+
+  #     - name: Build Apollo Router Lambda
+  #       uses: docker/build-push-action@v5
+  #       with:
+  #         context: lambda-directly-optimized
+  #         file: lambda-directly-optimized/Dockerfile-arm-graviton
+  #         load: true
+  #         tags: lambda
+  #         platforms: linux/arm64
+  #         cache-from: type=gha
+  #         cache-to: type=gha,mode=max
+
+  #     - name: Extract ARM bootstrap file
+  #       working-directory: lambda-directly-optimized
+  #       run: |
+  #         mkdir -p arm
+  #         export TMP_IMAGE_ID=$(docker create --platform linux/arm64 lambda)
+  #         docker cp $TMP_IMAGE_ID:/dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap arm/bootstrap
+  #         docker rm -v $TMP_IMAGE_ID
+
+  #     - uses: actions/upload-artifact@v3
+  #       with:
+  #         name: directly-optimized-graviton-arm
+  #         path: lambda-directly-optimized/arm/bootstrap
+  #         if-no-files-found: error
+  #         retention-days: 1
 
   build-directly-optimized-arm-graviton:
     runs-on: ubuntu-latest
+    # Set permissions if you're using OIDC token authentication.
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
+      - uses: depot/setup-action@v1
 
       - name: Build Apollo Router Lambda
-        uses: docker/build-push-action@v5
+        uses: depot/build-push-action@v1
         with:
+          project: 790k10m5qn
           context: lambda-directly-optimized
           file: lambda-directly-optimized/Dockerfile-arm-graviton
           load: true
           tags: lambda
           platforms: linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Extract ARM bootstrap file
         working-directory: lambda-directly-optimized
@@ -177,7 +212,7 @@ jobs:
         build-with-server,
         build-directly,
         build-directly-optimized-x86,
-        build-directly-optimized-arm,
+        # build-directly-optimized-arm,
         build-directly-optimized-arm-graviton,
       ]
     steps:
@@ -196,7 +231,7 @@ jobs:
           mv release-artifacts/with-server-x86-64/bootstrap release-artifacts/bootstrap-with-server-x86-64
           mv release-artifacts/directly-x86-64/bootstrap release-artifacts/bootstrap-directly-x86-64
           mv release-artifacts/directly-optimized-x86-64/bootstrap release-artifacts/bootstrap-directly-optimized-x86-64
-          mv release-artifacts/directly-optimized-arm/bootstrap release-artifacts/bootstrap-directly-optimized-arm
+          # mv release-artifacts/directly-optimized-arm/bootstrap release-artifacts/bootstrap-directly-optimized-arm
           mv release-artifacts/directly-optimized-graviton-arm/bootstrap release-artifacts/bootstrap-directly-optimized-graviton-arm
 
       - name: Set release info
@@ -207,7 +242,8 @@ jobs:
 
       - uses: ncipollo/release-action@v1.13.0
         with:
-          artifacts: "release-artifacts/bootstrap-with-server-x86-64,release-artifacts/bootstrap-directly-x86-64,release-artifacts/bootstrap-directly-optimized-x86-64,release-artifacts/bootstrap-directly-optimized-arm,release-artifacts/bootstrap-directly-optimized-graviton-arm"
+          # NOTE: release-artifacts/bootstrap-directly-optimized-arm is not included here.
+          artifacts: "release-artifacts/bootstrap-with-server-x86-64,release-artifacts/bootstrap-directly-x86-64,release-artifacts/bootstrap-directly-optimized-x86-64,release-artifacts/bootstrap-directly-optimized-graviton-arm"
           # Automatically create the tag from the commit if it doesn't exist.
           tag: ${{ steps.info.outputs.tag-name }}
           commit: ${{ github.sha }}
