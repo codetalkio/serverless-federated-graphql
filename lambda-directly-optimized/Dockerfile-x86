@@ -1,4 +1,4 @@
-FROM amazon/aws-lambda-provided:al2 as builder
+FROM amazon/aws-lambda-provided:al2.2023.11.10.17 as builder
 # We need nightly to be able to use build-std. Alternatively, use 1.72.0.
 ARG RUST_VERSION=nightly-2023-11-12
 ARG TARGET=x86_64-unknown-linux-gnu
