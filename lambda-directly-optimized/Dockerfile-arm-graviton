@@ -1,7 +1,7 @@
 FROM public.ecr.aws/lambda/provided:al2-arm64 as builder
 # We need nightly to be able to use build-std. Alternatively, use 1.72.0.
-ARG RUST_VERSION=nightly-2023-10-11
-ARG TARGET=x86_64-unknown-linux-gnu
+ARG RUST_VERSION=nightly-2023-11-12
+ARG TARGET=aarch64-unknown-linux-gnu
 
 RUN yum install -y jq openssl-devel gcc wget tar gzip unzip \
   && yum group install -y "Development Tools"
@@ -35,7 +35,7 @@ WORKDIR /dist/apollo-router-lambda
 COPY Cargo.toml /dist/apollo-router-lambda/Cargo.toml
 COPY Cargo.lock /dist/apollo-router-lambda/Cargo.lock
 COPY scaffold.rs /dist/apollo-router-lambda/src/main.rs
-RUN export PATH="$HOME/.cargo/bin:$PATH"; export RUSTFLAGS="-Ctarget-feature=+lse -Ctarget-cpu=neoverse-n1"; cargo lambda build --compiler cargo --release; rm -r src; target/lambda/apollo-router-lambda/bootstrap
+RUN export PATH="$HOME/.cargo/bin:$PATH"; export RUSTFLAGS="-Ctarget-feature=+lse -Ctarget-cpu=neoverse-n1 -Zlocation-detail=none"; cargo +$RUST_VERSION lambda build --compiler cargo -Z build-std=std -Z threads=8 --target $TARGET --release; rm -r src; target/lambda/apollo-router-lambda/bootstrap
 
 # Copy our actual application code and build this.
 COPY src /dist/apollo-router-lambda/src
@@ -44,4 +44,4 @@ COPY src /dist/apollo-router-lambda/src
 # /dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap
 # NOTE: We add additional ARM/Graviton2 specific flags to the build process. See more at
 # https://github.com/aws/aws-graviton-getting-started/blob/main/rust.md.
-RUN export PATH="$HOME/.cargo/bin:$PATH"; export RUSTFLAGS="-Ctarget-feature=+lse -Ctarget-cpu=neoverse-n1"; cargo lambda build --compiler cargo --release
+RUN export PATH="$HOME/.cargo/bin:$PATH"; export RUSTFLAGS="-Ctarget-feature=+lse -Ctarget-cpu=neoverse-n1 -Zlocation-detail=none"; cargo +$RUST_VERSION lambda build --compiler cargo -Z build-std=std -Z threads=8 --target $TARGET --release
