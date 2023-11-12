@@ -116,8 +116,9 @@ _build-lambda-directly-optimized-arm:
   #!/usr/bin/env bash
   set -euxo pipefail
   cd lambda-directly-optimized
+  mkdir -p arm
   docker buildx build -f Dockerfile-arm --platform linux/arm64 -t lambda-directly-optimized:lambda-arm .
-  export TMP_IMAGE_ID=$(docker create --platform linux/arm64 lambda-directly:lambda-arm)
+  export TMP_IMAGE_ID=$(docker create --platform linux/arm64 lambda-directly-optimized:lambda-arm)
   docker cp $TMP_IMAGE_ID:/dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap arm/bootstrap
   docker rm -v $TMP_IMAGE_ID
 
@@ -125,7 +126,8 @@ _build-lambda-directly-optimized-x86:
   #!/usr/bin/env bash
   set -euxo pipefail
   cd lambda-directly-optimized
+  mkdir -p x86
   docker buildx build -f Dockerfile-x86 --platform linux/amd64 -t lambda-directly-optimized:lambda-x86 .
-  export TMP_IMAGE_ID=$(docker create --platform linux/amd64 lambda-directly:lambda-x86)
+  export TMP_IMAGE_ID=$(docker create --platform linux/amd64 lambda-directly-optimized:lambda-x86)
   docker cp $TMP_IMAGE_ID:/dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap x86/bootstrap
   docker rm -v $TMP_IMAGE_ID
