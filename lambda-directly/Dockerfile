@@ -28,7 +28,15 @@ RUN curl -LO https://github.com/cargo-lambda/cargo-lambda/releases/download/v0.2
   && mv cargo-lambda $HOME/.cargo/bin/cargo-lambda
 
 WORKDIR /dist/apollo-router-lambda
-COPY . /dist/apollo-router-lambda
+
+# Build all of our dependencies.
+COPY Cargo.toml /dist/apollo-router-lambda/Cargo.toml
+COPY Cargo.lock /dist/apollo-router-lambda/Cargo.lock
+COPY scaffold.rs /dist/apollo-router-lambda/src/main.rs
+RUN export PATH="$HOME/.cargo/bin:$PATH"; cargo lambda build --compiler cargo --release; rm -r src; target/lambda/apollo-router-lambda/bootstrap
+
+# Copy our actual application code and build this.
+COPY src /dist/apollo-router-lambda/src
 
 # Build our lambda bootstrap binary. The release artifact can be found at:
 # /dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap

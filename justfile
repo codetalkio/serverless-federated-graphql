@@ -93,12 +93,39 @@ _invoke-lambda-directly-optimized:
 _invoke-lambda-with-server:
   cargo lambda invoke --invoke-port 4030 --data-ascii '{ "body": "{\"query\":\"{me { name } }\"}" }'
 
-# Build the bootstrap file in docker for <project>, e.g. `just build lambda-directly`.
+# Build the bootstrap file in docker for <project>, e.g. `just build lambda-directly-optimized-arm`.
 build project:
+  @ just _build-{{project}}
+
+_build-lambda-directly:
+  _build_generic "lambda-directly"
+
+_build-lambda-with-server:
+  _build_generic "lambda-with-server"
+
+_build_generic project:
   #!/usr/bin/env bash
   set -euxo pipefail
   cd {{project}}
   docker build -t {{project}}:lambda .
   export TMP_IMAGE_ID=$(docker create {{project}}:lambda)
   docker cp $TMP_IMAGE_ID:/dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap bootstrap
+  docker rm -v $TMP_IMAGE_ID
+
+_build-lambda-directly-optimized-arm:
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  cd lambda-directly-optimized
+  docker buildx build -f Dockerfile-arm --platform linux/arm64 -t lambda-directly-optimized:lambda-arm .
+  export TMP_IMAGE_ID=$(docker create --platform linux/arm64 lambda-directly:lambda-arm)
+  docker cp $TMP_IMAGE_ID:/dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap arm/bootstrap
+  docker rm -v $TMP_IMAGE_ID
+
+_build-lambda-directly-optimized-x86:
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  cd lambda-directly-optimized
+  docker buildx build -f Dockerfile-x86 --platform linux/amd64 -t lambda-directly-optimized:lambda-x86 .
+  export TMP_IMAGE_ID=$(docker create --platform linux/amd64 lambda-directly:lambda-x86)
+  docker cp $TMP_IMAGE_ID:/dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap x86/bootstrap
   docker rm -v $TMP_IMAGE_ID
