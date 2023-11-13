@@ -58,14 +58,7 @@ $ mkdir apollo-router
 Then we download the relevant
 
 ```bash
-$ curl -sSL https://github.com/codetalkio/apollo-router-lambda/releases/latest/download/bootstrap-directly-optimized-graviton-arm -o bootstrap
-  mv bootstrap ./apollo-router/bootstrap
-```
-
-If you want to use `lambda-directly` instead, you can use this URL instead:
-
-```bash
-$ curl -sSL https://github.com/codetalkio/apollo-router-lambda/releases/latest/download/bootstrap-directly-optimized-graviton-arm -o bootstrap
+$ curl -sSL https://github.com/codetalkio/apollo-router-lambda/releases/latest/download/bootstrap-directly-optimized-graviton-arm-size -o bootstrap
 $ mv bootstrap ./apollo-router/bootstrap
 ```
 
