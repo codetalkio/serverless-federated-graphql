@@ -1,7 +1,5 @@
 [target.x86_64-unknown-linux-gnu]
 rustflags = [
-  # Remove location details from panics to reduce size.
-  "-Zlocation-detail=none",
   # Enable parallel compiler Frontend for compilation speedup.
   "-Zthreads=8",
 ]

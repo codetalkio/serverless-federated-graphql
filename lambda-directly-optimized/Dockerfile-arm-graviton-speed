@@ -46,6 +46,7 @@ RUN export PATH="$HOME/.cargo/bin:$PATH"; \
   rm -r src; \
   # Delete the previously generated build artifacts.
   rm -r target/$TARGET/release/deps/apollo_router_lambda*; \
+  rm -r target/$TARGET/release-speed/deps/apollo_router_lambda*; \
   rm target/lambda/apollo-router-lambda/bootstrap
 
 # Copy our actual application code and build this.
