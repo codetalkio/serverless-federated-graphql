@@ -1,5 +1,6 @@
 FROM amazon/aws-lambda-provided:al2.2023.11.10.17 as builder
 ARG RUST_VERSION=1.72.0
+ARG TARGET=x86_64-unknown-linux-gnu
 
 RUN yum install -y jq openssl-devel gcc wget tar gzip unzip \
   && yum group install -y "Development Tools"
