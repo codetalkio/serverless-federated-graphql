@@ -17,7 +17,7 @@ This repository contains two examples:
 We do some additional tricks to reduce the size of the `bootstrap-directly-optimized-graviton-arm-size` binary, which has an impact on Cold Starts: 
 - We [remove location details](https://github.com/johnthagen/min-sized-rust#remove-location-details), [panic string formatting](https://github.com/johnthagen/min-sized-rust#remove-panic-string-formatting-with-panic_immediate_abort), and [abort on panic](https://github.com/johnthagen/min-sized-rust#abort-on-panic)
 - We [rebuild and optimize libstd](https://github.com/johnthagen/min-sized-rust#optimize-libstd-with-build-std) with build-std, which combined with the above brings us from ~71MB down to ~49MB.
-- ~~We use [upx](https://github.com/upx/upx) to reduce the size of the binaries.~~ Unfortuntately, the overhead of decompressing the binary significantly increases Cold Start times, e.g. `lambda-directly-optimized` goes up from 0.8s to 2.5s, after a binary reduction from 73.71MB to 18MB.
+- ~~We use [upx](https://github.com/upx/upx) to reduce the size of the binaries.~~ Unfortuntately, the overhead of decompressing the binary significantly increases Cold Start times, e.g. `lambda-directly-optimized` goes up from 0.8s to 2.5s, despite a binary reduction from 73.71MB to 18MB.
 
 Check out the code and `Dockerfile` for each. There's really not a lot going on, and it is a minimal implementation compared to what you'd want in Production. My current recommendation would be either use the `bootstrap-directly-optimized-graviton-arm` binary produced from the `lambda-directly-optimized` approach in AWS Lambda, or to run Apollo Router in App Runner, which it does extremely well (I can max out the allowed 200 concurrent requests on a 0.25 CPU and 0.5GB Memory setting).
 
