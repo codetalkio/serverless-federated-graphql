@@ -38,13 +38,14 @@ COPY Cargo.toml /dist/apollo-router-lambda/Cargo.toml
 COPY Cargo.lock /dist/apollo-router-lambda/Cargo.lock
 COPY scaffold.rs /dist/apollo-router-lambda/src/main.rs
 RUN export PATH="$HOME/.cargo/bin:$PATH"; \
-  export RUSTFLAGS="-Ctarget-feature=+lse -Ctarget-cpu=neoverse-n1 -Zlocation-detail=none -Zthreads=8"; \
   export AWS_LAMBDA_FUNCTION_NAME="_"; \
   export AWS_LAMBDA_FUNCTION_VERSION=1; \
   export AWS_LAMBDA_FUNCTION_MEMORY_SIZE=1024; \
   export AWS_LAMBDA_RUNTIME_API=http://[::]:9000/.rt; \
-  cargo lambda build --compiler cargo -Z build-std=std --target $TARGET --release; \
+  cargo lambda build --compiler cargo -Z build-std=std,panic_abort --target $TARGET --release; \
   rm -r src; \
+  # Delete the previously generated build artifacts.
+  rm -r target/$TARGET/release/deps/apollo_router_lambda*; \
   rm target/lambda/apollo-router-lambda/bootstrap
 
 # Copy our actual application code and build this.
@@ -52,10 +53,5 @@ COPY src/main.rs /dist/apollo-router-lambda/src/main.rs
 
 # Build our lambda bootstrap binary. The release artifact can be found at:
 # /dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap
-# NOTE: We add additional ARM/Graviton2 specific flags to the build process. See more at
-# https://github.com/aws/aws-graviton-getting-started/blob/main/rust.md.
 RUN export PATH="$HOME/.cargo/bin:$PATH"; \
-    export RUSTFLAGS="-Ctarget-feature=+lse -Ctarget-cpu=neoverse-n1 -Zlocation-detail=none -Zthreads=8"; \
-    # Delete the previously generated main.rs artifacts.
-    rm -r target/$TARGET/release/deps/apollo_router_lambda*; \
-    cargo lambda build --compiler cargo -Z build-std=std --target $TARGET --release
+    cargo lambda build --compiler cargo -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target $TARGET --release

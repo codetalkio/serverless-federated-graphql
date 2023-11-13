@@ -8,11 +8,16 @@ license = "MIT OR Apache-2.0"
 # - https://doc.rust-lang.org/cargo/reference/profiles.html#default-profiles
 # - https://github.com/johnthagen/min-sized-rust
 [profile.release]
-opt-level = 3     # Optimize for speed.
 lto = true        # Enable Link Time Optimization
 codegen-units = 1 # Reduce Parallel Code Generation Units to Increase Optimization.
 strip = true      # Automatically strip symbols from the binary.
 debug = false
+
+# Optimize for speed.
+# opt-level = 3
+# Optimize for size.
+opt-level = "z"
+panic = "abort"
 
 [dependencies]
 # The Apollo Router.

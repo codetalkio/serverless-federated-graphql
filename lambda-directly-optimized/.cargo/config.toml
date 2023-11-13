@@ -1,0 +1,19 @@
+[target.x86_64-unknown-linux-gnu]
+rustflags = [
+  # Remove location details from panics to reduce size.
+  "-Zlocation-detail=none",
+  # Enable parallel compiler Frontend for compilation speedup.
+  "-Zthreads=8",
+]
+
+[target.aarch64-unknown-linux-gnu]
+rustflags = [
+  # Optimize for the ARM/Graviton2 CPU architecture to improve performance. See more at
+  # https://github.com/aws/aws-graviton-getting-started/blob/main/rust.md.
+  "-Ctarget-feature=+lse",
+  "-Ctarget-cpu=neoverse-n1",
+  # Remove location details from panics to reduce size.
+  "-Zlocation-detail=none",
+  # Enable parallel compiler Frontend for compilation speedup.
+  "-Zthreads=8",
+]

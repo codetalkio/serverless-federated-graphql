@@ -41,6 +41,8 @@ RUN export PATH="$HOME/.cargo/bin:$PATH"; \
     export AWS_LAMBDA_RUNTIME_API=http://[::]:9000/.rt; \
     cargo lambda build --compiler cargo --release; \
     rm -r src; \
+    # Delete the previously generated main.rs artifacts.
+    rm -r target/$TARGET/release/deps/apollo_router_lambda*; \
     rm target/lambda/apollo-router-lambda/bootstrap
 
 # Copy our actual application code and build this.
@@ -49,6 +51,4 @@ COPY src/main.rs /dist/apollo-router-lambda/src/main.rs
 # Build our lambda bootstrap binary. The release artifact can be found at:
 # /dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap
 RUN export PATH="$HOME/.cargo/bin:$PATH"; \
-    # Delete the previously generated main.rs artifacts.
-    rm -r target/x86_64-unknown-linux-gnu/release/deps/apollo_router_lambda*; \
     cargo lambda build --compiler cargo --release

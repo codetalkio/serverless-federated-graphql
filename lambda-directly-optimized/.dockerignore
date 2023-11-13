@@ -5,3 +5,4 @@
 !scaffold.rs
 !router.yaml
 !supergraph.graphql
+!.cargo/config.toml
