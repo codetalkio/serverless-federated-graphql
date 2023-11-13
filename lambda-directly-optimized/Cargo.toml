@@ -13,8 +13,17 @@ codegen-units = 1 # Reduce Parallel Code Generation Units to Increase Optimizati
 strip = true      # Automatically strip symbols from the binary.
 debug = false
 
+# Use the `--profile release-speed` flag to optimize for speed in release mode. E.g.
+# `cargo build --profile release-speed`.
+[profile.release-speed]
+inherits = "release"
 # Optimize for speed.
-# opt-level = 3
+opt-level = 3
+
+# Use the `--profile release-size` flag to optimize for size in release mode. E.g.
+# `cargo build --profile release-size`.
+[profile.release-size]
+inherits = "release"
 # Optimize for size.
 opt-level = "z"
 panic = "abort"

@@ -1,7 +1,7 @@
-FROM amazon/aws-lambda-provided:al2.2023.11.10.17 as builder
+FROM public.ecr.aws/lambda/provided:al2-arm64 as builder
 # We need nightly to be able to use build-std. Alternatively, use 1.72.0.
 ARG RUST_VERSION=nightly-2023-11-12
-ARG TARGET=x86_64-unknown-linux-gnu
+ARG TARGET=aarch64-unknown-linux-gnu
 
 RUN yum install -y jq openssl-devel gcc wget tar gzip unzip \
   && yum group install -y "Development Tools"
@@ -15,8 +15,8 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v3.5.1/cmake-3.5.1.t
   && make install
 
 # Install profobuf (used by apollo-router).
-RUN curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v3.15.8/protoc-3.15.8-linux-x86_64.zip \
-  && unzip protoc-3.15.8-linux-x86_64.zip -d .\
+RUN curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v3.15.8/protoc-3.15.8-linux-aarch_64.zip  \
+  && unzip protoc-3.15.8-linux-aarch_64.zip  -d .\
   # Protobuf expects its "include" directory to be in the same directory as the binary.
   && mv bin/protoc /usr/local/bin/protoc \
   && mv include /usr/local/bin/include
@@ -26,8 +26,8 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
   export PATH="$HOME/.cargo/bin:$PATH"; rustup component add rust-src --toolchain $RUST_VERSION
 
 # Fetch the cargo-lambda binary.
-RUN curl -LO https://github.com/cargo-lambda/cargo-lambda/releases/download/v0.22.0/cargo-lambda-v0.22.0.x86_64-unknown-linux-musl.tar.gz \
-  && tar -xvf cargo-lambda-v0.22.0.x86_64-unknown-linux-musl.tar.gz \
+RUN curl -LO https://github.com/cargo-lambda/cargo-lambda/releases/download/v0.22.0/cargo-lambda-v0.22.0.aarch64-unknown-linux-musl.tar.gz \
+  && tar -xvf cargo-lambda-v0.22.0.aarch64-unknown-linux-musl.tar.gz \
   && chmod +x cargo-lambda \
   && mv cargo-lambda $HOME/.cargo/bin/cargo-lambda
 
@@ -42,9 +42,9 @@ RUN export PATH="$HOME/.cargo/bin:$PATH"; \
   export AWS_LAMBDA_FUNCTION_VERSION=1; \
   export AWS_LAMBDA_FUNCTION_MEMORY_SIZE=1024; \
   export AWS_LAMBDA_RUNTIME_API=http://[::]:9000/.rt; \
-  cargo lambda build --compiler cargo -Z build-std=std --target $TARGET --profile release-speed; \
+  cargo lambda build --compiler cargo -Z build-std=std,panic_abort --target $TARGET --profile release-size; \
   rm -r src; \
-  # Delete the previously generated main.rs artifacts.
+  # Delete the previously generated build artifacts.
   rm -r target/$TARGET/release/deps/apollo_router_lambda*; \
   rm target/lambda/apollo-router-lambda/bootstrap
 
@@ -54,4 +54,4 @@ COPY src/main.rs /dist/apollo-router-lambda/src/main.rs
 # Build our lambda bootstrap binary. The release artifact can be found at:
 # /dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap
 RUN export PATH="$HOME/.cargo/bin:$PATH"; \
-  cargo lambda build --compiler cargo -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target $TARGET --profile release-speed
+    cargo lambda build --compiler cargo -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target $TARGET --profile release-size

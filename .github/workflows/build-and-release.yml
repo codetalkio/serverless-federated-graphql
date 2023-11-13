@@ -137,7 +137,7 @@ jobs:
   #         if-no-files-found: error
   #         retention-days: 1
 
-  build-directly-optimized-arm-graviton:
+  build-directly-optimized-arm-graviton-size:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -149,7 +149,7 @@ jobs:
           project: 790k10m5qn
           token: ${{ secrets.DEPOT_TOKEN }}
           context: lambda-directly-optimized
-          file: lambda-directly-optimized/Dockerfile-arm-graviton
+          file: lambda-directly-optimized/Dockerfile-arm-graviton-size
           load: true
           tags: lambda
           platforms: linux/arm64
@@ -164,7 +164,39 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: directly-optimized-graviton-arm
+          name: directly-optimized-graviton-arm-size
+          path: lambda-directly-optimized/arm/bootstrap
+          if-no-files-found: error
+          retention-days: 1
+
+  build-directly-optimized-arm-graviton-speed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: depot/setup-action@v1
+
+      - name: Build Apollo Router Lambda
+        uses: depot/build-push-action@v1
+        with:
+          project: 790k10m5qn
+          token: ${{ secrets.DEPOT_TOKEN }}
+          context: lambda-directly-optimized
+          file: lambda-directly-optimized/Dockerfile-arm-graviton-speed
+          load: true
+          tags: lambda
+          platforms: linux/arm64
+
+      - name: Extract ARM bootstrap file
+        working-directory: lambda-directly-optimized
+        run: |
+          mkdir -p arm
+          export TMP_IMAGE_ID=$(docker create --platform linux/arm64 lambda)
+          docker cp $TMP_IMAGE_ID:/dist/apollo-router-lambda/target/lambda/apollo-router-lambda/bootstrap arm/bootstrap
+          docker rm -v $TMP_IMAGE_ID
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: directly-optimized-graviton-arm-speed
           path: lambda-directly-optimized/arm/bootstrap
           if-no-files-found: error
           retention-days: 1
@@ -208,7 +240,8 @@ jobs:
         build-directly,
         # build-directly-optimized-x86,
         # build-directly-optimized-arm,
-        build-directly-optimized-arm-graviton,
+        build-directly-optimized-arm-graviton-size,
+        build-directly-optimized-arm-graviton-speed,
       ]
     steps:
       - uses: actions/checkout@v4
@@ -227,7 +260,8 @@ jobs:
           mv release-artifacts/directly-x86-64/bootstrap release-artifacts/bootstrap-directly-x86-64
           # mv release-artifacts/directly-optimized-x86-64/bootstrap release-artifacts/bootstrap-directly-optimized-x86-64
           # mv release-artifacts/directly-optimized-arm/bootstrap release-artifacts/bootstrap-directly-optimized-arm
-          mv release-artifacts/directly-optimized-graviton-arm/bootstrap release-artifacts/bootstrap-directly-optimized-graviton-arm
+          mv release-artifacts/directly-optimized-graviton-arm-size/bootstrap release-artifacts/bootstrap-directly-optimized-graviton-arm-size
+          mv release-artifacts/directly-optimized-graviton-arm-speed/bootstrap release-artifacts/bootstrap-directly-optimized-graviton-arm-speed
 
       - name: Set release info
         id: info
@@ -239,7 +273,7 @@ jobs:
         with:
           # NOTE: release-artifacts/bootstrap-directly-optimized-arm is not included here.
           # NOTE: release-artifacts/bootstrap-directly-optimized-x86-64 is not included here.
-          artifacts: "release-artifacts/bootstrap-with-server-x86-64,release-artifacts/bootstrap-directly-x86-64,release-artifacts/bootstrap-directly-optimized-graviton-arm"
+          artifacts: "release-artifacts/bootstrap-with-server-x86-64,release-artifacts/bootstrap-directly-x86-64,release-artifacts/bootstrap-directly-optimized-graviton-arm-speed,release-artifacts/bootstrap-directly-optimized-graviton-arm-size"
           # Automatically create the tag from the commit if it doesn't exist.
           tag: ${{ steps.info.outputs.tag-name }}
           commit: ${{ github.sha }}
