@@ -149,7 +149,7 @@ jobs:
           project: 790k10m5qn
           token: ${{ secrets.DEPOT_TOKEN }}
           context: lambda-directly-optimized
-          file: lambda-directly-optimized/Dockerfile-arm-graviton-size
+          file: lambda-directly-optimized/Dockerfile-arm-graviton-size-al2023
           load: true
           tags: lambda
           platforms: linux/arm64
