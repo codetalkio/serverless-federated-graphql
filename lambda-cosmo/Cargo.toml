@@ -1,0 +1,35 @@
+[package]
+name = "router-cosmo"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+# Configurations explicitly listed here for clarity, using the best options for performance.
+# - https://doc.rust-lang.org/cargo/reference/profiles.html#default-profiles
+# - https://github.com/johnthagen/min-sized-rust
+[profile.release]
+opt-level = 3     # Optimize for speed.
+lto = true        # Enable Link Time Optimization
+codegen-units = 1 # Reduce Parallel Code Generation Units to Increase Optimization.
+strip = true      # Automatically strip symbols from the binary.
+debug = false
+
+[dependencies]
+# Talking to our Router service.
+axum = { version = "0.6", features = ["headers"], optional = true }
+reqwest = { version = "0.11.22", default-features = false, features = [
+  "rustls",
+  "json",
+] }
+
+# Using AWS services.
+tokio = { version = "1.33.0", features = ["macros", "process"] }
+lambda_http = "0.8.1"
+lambda_runtime = "0.8.1"
+
+# Utilities.
+simple-error = "0.3.0"
+serde_json = "1"
+serde = { version = "1", features = ["derive"] }
+tracing = "0.1.37"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

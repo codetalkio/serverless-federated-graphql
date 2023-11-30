@@ -6,6 +6,7 @@ on:
       - "lambda-with-server/**"
       - "lambda-directly/**"
       - "lambda-directly-optimized/**"
+      - "lambda-cosmo/**"
       - ".github/workflows/build-and-release.yml"
 
 defaults:
@@ -13,6 +14,41 @@ defaults:
     shell: bash # Set the default shell to bash.
 
 jobs:
+  build-cosmo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: extractions/setup-just@v1
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          cache: true
+      - name: Install Zig toolchain
+        uses: korandoru/setup-zig@v1
+        with:
+          zig-version: 0.11.0
+      - name: Install Cargo Lambda
+        uses: jaxxstorm/action-install-gh-release@v1.9.0
+        with:
+          repo: cargo-lambda/cargo-lambda
+          platform: linux
+          arch: x86_64
+
+      - uses: mozilla-actions/sccache-action@v0.0.3
+        name: 'Setup sccache'
+
+      - name: Build release build
+        run: just build lambda-cosmo
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: cosmo-arm
+          path: lambda-cosmo/target/lambda/router-cosmo/bootstrap
+          if-no-files-found: error
+          retention-days: 1
+
   build-with-server:
     runs-on: ubuntu-latest
     steps:
@@ -242,6 +278,7 @@ jobs:
         # build-directly-optimized-arm,
         build-directly-optimized-arm-graviton-size,
         build-directly-optimized-arm-graviton-speed,
+        build-cosmo,
       ]
     steps:
       - uses: actions/checkout@v4
@@ -262,6 +299,7 @@ jobs:
           # mv release-artifacts/directly-optimized-arm/bootstrap release-artifacts/bootstrap-directly-optimized-arm
           mv release-artifacts/directly-optimized-graviton-arm-size/bootstrap release-artifacts/bootstrap-directly-optimized-graviton-arm-size
           mv release-artifacts/directly-optimized-graviton-arm-speed/bootstrap release-artifacts/bootstrap-directly-optimized-graviton-arm-speed
+          mv release-artifacts/cosmo-arm/bootstrap release-artifacts/bootstrap-cosmo-arm
 
       - name: Set release info
         id: info
@@ -273,7 +311,7 @@ jobs:
         with:
           # NOTE: release-artifacts/bootstrap-directly-optimized-arm is not included here.
           # NOTE: release-artifacts/bootstrap-directly-optimized-x86-64 is not included here.
-          artifacts: "release-artifacts/bootstrap-with-server-x86-64,release-artifacts/bootstrap-directly-x86-64,release-artifacts/bootstrap-directly-optimized-graviton-arm-speed,release-artifacts/bootstrap-directly-optimized-graviton-arm-size"
+          artifacts: "release-artifacts/bootstrap-with-server-x86-64,release-artifacts/bootstrap-directly-x86-64,release-artifacts/bootstrap-directly-optimized-graviton-arm-speed,release-artifacts/bootstrap-directly-optimized-graviton-arm-size,release-artifacts/bootstrap-cosmo-arm"
           # Automatically create the tag from the commit if it doesn't exist.
           tag: ${{ steps.info.outputs.tag-name }}
           commit: ${{ github.sha }}

@@ -1,0 +1,75 @@
+ersion: '1'
+
+# General router options
+graph:
+  name: 'router' # or FEDERATED_GRAPH_NAME.
+  # Token is set via GRAPH_API_TOKEN.
+
+outer_config_path: './supergraph.json'
+
+log_level: 'info'
+listen_addr: 'localhost:4000'
+playground_enabled: true
+introspection_enabled: true
+json_log: true
+# controlplane_url: 'https://cosmo-cp.wundergraph.com'
+
+cors:
+  allow_origins: ['*']
+  allow_methods:
+    - HEAD
+    - GET
+    - POST
+  allow_headers:
+    - Origin
+    - Content-Length
+    - Content-Type
+  allow_credentials: true
+  max_age_minutes: 5m
+
+# Config for custom modules
+# See "https://cosmo-docs.wundergraph.com/router/metrics-and-monitoring" for more information
+telemetry:
+  # OpenTelemetry Tracing
+  tracing:
+    enabled: false
+  # OpenTelemetry Metrics
+  metrics:
+    otlp:
+      enabled: false
+    prometheus:
+      enabled: false
+
+# Traffic configuration
+# See "https://cosmo-docs.wundergraph.com/router/traffic-shaping" for more information
+# traffic_shaping:
+#   # Apply to all requests from clients to the router
+#   router:
+#     # Is the maximum size of the request body in MB, mib
+#     max_request_body_size: 5MB
+#   all: # Rules are applied to all subgraph requests.
+#     # Subgraphs transport options
+#     request_timeout: 60s
+#     dial_timeout: 30s
+#     tls_handshake_timeout: 0s
+#     response_header_timeout: 0s
+#     expect_continue_timeout: 0s
+#     keep_alive_idle_timeout: 0s
+#     keep_alive_probe_interval: 30s
+#     # Retry
+#     retry: # Rule is only applied to GraphQL operations of type "query"
+#       enabled: true
+#       algorithm: "backoff_jitter"
+#       max_attempts: 5
+#       interval: 3s
+#       max_duration: 10s
+
+# Header manipulation
+# See "https://cosmo-docs.wundergraph.com/router/proxy-capabilities" for more information
+headers:
+  all: # Header rules for all origin requests.
+    request:
+      - op: 'propagate'
+        named: X-Test-Header
+      - op: 'propagate'
+        matching: (?i)^x-deprecated-.*

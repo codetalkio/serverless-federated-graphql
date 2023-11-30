@@ -80,6 +80,9 @@ _dev-lambda-directly-optimized:
 _dev-lambda-with-server:
   cd lambda-directly && cargo lambda watch --invoke-port 4030
 
+_dev-lambda-cosmo:
+  cd lambda-cosmo && cargo lambda watch --invoke-port 4040
+
 # Invoke the local lambda function for <project>, e.g. `just invoke lambda-directly`.
 invoke project:
   just _invoke-{{project}}
@@ -93,6 +96,9 @@ _invoke-lambda-directly-optimized:
 _invoke-lambda-with-server:
   cargo lambda invoke --invoke-port 4030 --data-ascii '{ "body": "{\"query\":\"{me { name } }\"}" }'
 
+_invoke-lambda-cosmo:
+  cargo lambda invoke --invoke-port 4040 --data-ascii '{ "body": "{\"query\":\"{me { name } }\"}" }'
+
 # Build the bootstrap file in docker for <project>, e.g. `just build lambda-directly-optimized-arm`.
 build project:
   @ just _build-{{project}}
@@ -102,6 +108,9 @@ _build-lambda-directly:
 
 _build-lambda-with-server:
   _build_generic "lambda-with-server"
+
+_build-lambda-cosmo:
+  cd lambda-cosmo && cargo lambda build --arm64 --release
 
 _build_generic project:
   #!/usr/bin/env bash
