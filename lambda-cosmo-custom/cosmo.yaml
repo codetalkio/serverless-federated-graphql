@@ -8,7 +8,7 @@ graph:
 outer_config_path: './supergraph.json'
 
 log_level: 'info'
-listen_addr: 'localhost:4000'
+listen_addr: '127.0.0.1:4000'
 playground_enabled: true
 introspection_enabled: true
 json_log: true
