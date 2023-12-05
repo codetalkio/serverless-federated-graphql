@@ -252,7 +252,7 @@ Another comparison point against the Apollo Router PoC, here's one alternative u
 
 Cold start (653ms):
 
-
+<img width="1344" alt="ms-cosmo (Cold, No query) Screenshot 2023-11-30 at 18 58 14" src="https://github.com/codetalkio/apollo-router-lambda/assets/1189998/810e10c5-5c21-4727-8667-169568c37cad">
 
 Breakdown of only the router (making no queries to subgraphs):
 
@@ -264,3 +264,5 @@ Breakdown of only the router (making no queries to subgraphs):
 | Slowest warm response time | 28.9 ms | 27.9 ms | 27.9 ms |
 | Fastest cold response time  | 427 ms | 427 ms | 427 ms |
 | Slowest cold response time | 1375 ms | 888 ms | 621.9 ms |
+
+
