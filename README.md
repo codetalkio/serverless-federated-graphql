@@ -115,17 +115,6 @@ Breakdown of only the router (making no queries to subgraphs):
 
 <img width="1633" alt="Lambda Router Cold Screenshot 2023-10-31 at 20 57 47" src="https://github.com/codetalkio/apollo-router-lambda/assets/1189998/cd3f4e41-91ef-41e2-ba1a-1213803bff30">
 
-Breakdown of only the router (making no queries to subgraphs):
-
-| Measurement (ms) | 128 MB | 256 MB | 512 MB | 1024 MB | 2048 MB |
-|-------------|-------------|-------------|-------------|-------------|-------------|
-| Average warm start response time | 10.1 ms | 8 ms | 8.7 ms | 8.9 ms | 7.6 ms |
-| Average cold start response time | 720 ms | 505 ms | 511.5 ms | 455.2 ms | 424.9 ms |
-| Fastest warm response time | 4.9 ms | 4.9 ms | 4.9 ms | 4.9 ms | 5.9 ms |
-| Slowest warm response time | 29 ms | 29 ms | 29 ms | 29 ms | 11.9 ms |
-| Fastest cold response time  | 373.9 ms | 373.9 ms | 373.9 ms | 373.9 ms | 375 ms |
-| Slowest cold response time | 1426 ms | 918.9 ms | 700.9 ms | 700.9 ms | 507.9 ms |
-
 `lambda-directly-optimized` (optimized for speed)
 
 <img width="1635" alt="Cold start (No Query) Screenshot 2023-11-11 at 23 25 15" src="https://github.com/codetalkio/apollo-router-lambda/assets/1189998/400b66fb-ada1-4031-bc39-7867e9e4a29f">
