@@ -3,39 +3,44 @@ package main
 import (
 	// Cosmo Router.
 	routercmd "github.com/wundergraph/cosmo/router/cmd"
+
 	// AWS Lambda.
-	"fmt"
-
 	"github.com/aws/aws-lambda-go/lambda"
-	// Proxy.
 
-	"net/http"
-	"time"
-
-	// Local server.
+	// Proxy and utilities.
+	"bytes"
+	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"os"
+	"time"
 
+	// HTTP adapter used for local server setup.
 	"github.com/awslabs/aws-lambda-go-api-proxy/httpadapter"
 )
 
+// The invoke function is used to invoke the Cosmo Router. It simply proxies
+// the request to the router and returns the response.
 func invoke(r *http.Request) (*http.Response, error) {
+	// The URL our Cosmo Router will be available on.
 	url := "http://127.0.0.1:4000/graphql"
 
+	// Mainly for debugging, log the request body.
 	req_body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
 	}
-
 	log.Printf("Proxying request to router: %s\n", req_body)
 
-	req, err := http.NewRequest("POST", url, r.Body)
+	// Create a new request with the same body as the original.
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(req_body))
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Add("Content-Type", "application/json")
 
+	// Make the actual request to the router.
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
@@ -45,19 +50,20 @@ func invoke(r *http.Request) (*http.Response, error) {
 	return res, nil
 }
 
+// HandleRequest is the handles invoking the router and retrying the same
+// request until it succeeds or we exceed retires. The retrying is to handle
+// failures when the router is starting up.
 func HandleRequest(w http.ResponseWriter, r *http.Request) {
-	var retries int
-	retries = 0
+	retries := 0
 
-	var res *http.Response
-	var err error
-	res, err = invoke(r)
+	// Do an initial invoke and see if it succeeds.
+	res, err := invoke(r)
 	for {
+		// If we've exceeded retries or the request succeeded, break.
 		if retries >= 500 || err == nil {
 			break
 		}
-		// Sleep for 10 ms.
-		// This is to give the router time to start up.
+		// Sleep for 10 ms and try again.
 		time.Sleep(time.Duration(time.Duration(retries).Milliseconds()))
 		res, err = invoke(r)
 	}
@@ -67,9 +73,14 @@ func HandleRequest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error handling request", http.StatusInternalServerError)
 		return
 	}
-	log.Printf("Response from router: %s\n", res.Body)
 
+	// Finally, return the response.
 	body_res, err := io.ReadAll(res.Body)
+	if err != nil || body_res == nil {
+		http.Error(w, "Error reading router response", http.StatusInternalServerError)
+		return
+	}
+	log.Printf("Response from router: %s\n", body_res)
 	io.WriteString(w, string(body_res))
 }
 
@@ -77,9 +88,11 @@ func main() {
 	// Start the Router in the background.
 	go routercmd.Main()
 
+	// Set up our handler as the root HTTP handler.
 	http.HandleFunc("/", HandleRequest)
 
-	// Determine if we're running in Lambda or locally.
+	// Determine if we're running in Lambda or locally. If HTTP_PORT is set
+	// we start a local HTTP server, otherwise we start the Lambda handler.
 	httpPort := os.Getenv("HTTP_PORT")
 	if httpPort == "" {
 		log.Println("Starting Lambda Handler")
