@@ -2,7 +2,7 @@
 
 > Minimal/scrappy build of Apollo Router built for Lambda via Amazon Linux 2.
 
-**TL;DR**: Of the Apollo Router variants, `lambda-directly-optimized` beats all alternatives for Cold and Warm Starts (use the `bootstrap-directly-optimized-graviton-arm-size` binary), although I'd actually recommend the `lambda-cosmo` alternative.
+**TL;DR**: Of the Apollo Router variants, `lambda-directly-optimized` beats all other variants and is on par with the alternatives for Cold and Warm Starts (use the `bootstrap-directly-optimized-graviton-arm-size` binary). That said, I'd actually recommend the `lambda-cosmo` alternative which is a lot less hacky and more performant.
 
 Currently [Apollo Router](https://github.com/apollographql/router) does not support running in AWS Lambda (https://github.com/apollographql/router/issues/364). Instead it's focusing on running as a long-lived process, which means that it's less optimized for quick startup, as well as built with dependencies that does not mesh with Lambda's Amazon Linux 2 environment.
 
