@@ -64,7 +64,7 @@ func HandleRequest(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		// Sleep for 10 ms and try again.
-		time.Sleep(time.Duration(time.Duration(retries).Milliseconds()))
+		time.Sleep(time.Duration(time.Duration(10).Milliseconds()))
 		res, err = invoke(r)
 	}
 	log.Printf("Retries: %d, waited a total %dms\n", retries, retries*10)
