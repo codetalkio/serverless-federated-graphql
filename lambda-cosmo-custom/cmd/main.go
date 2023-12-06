@@ -62,7 +62,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		// Sleep for 10 ms and try again.
-		time.Sleep(time.Duration(time.Duration(10).Milliseconds()))
+		time.Sleep(5 * time.Millisecond)
 		res, err = invoke(req_body)
 		retries += 1
 	}
