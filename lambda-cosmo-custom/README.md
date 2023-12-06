@@ -24,8 +24,10 @@ Update dependencies:
 $ go mod tidy
 ```
 
-Build the go module:
+Build the go module for Arm64 and without RPC:
 
 ```bash
-$ GOOS=linux GOARCH=arm64 go build -o bin/handler cmd/main.go
+$ GOOS=linux GOARCH=arm64 go build -tags lambda.norpc -o bin/bootstrap cmd/main.go
 ```
+
+You can see more about build recommendations here https://aws.amazon.com/blogs/compute/migrating-aws-lambda-functions-from-the-go1-x-runtime-to-the-custom-runtime-on-amazon-linux-2/.
