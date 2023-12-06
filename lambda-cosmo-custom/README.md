@@ -1,5 +1,41 @@
 # Cosmo Router
 
+This variant constructs a Go program that uses the Cosmo Router as a library, and wraps it up in Go calling code for AWS Lambda.
+
+Usage:
+
+Install dependencies:
+
+```bash
+$ go mod tidy
+```
+
+Build the go module for Arm64 and without RPC (see why for the [RPC part here](https://aws.amazon.com/blogs/compute/migrating-aws-lambda-functions-from-the-go1-x-runtime-to-the-custom-runtime-on-amazon-linux-2/)):
+
+```bash
+$ GOOS=linux GOARCH=arm64 go build -tags lambda.norpc -o bin/bootstrap cmd/main.go
+```
+
+Put your configuration files in the same directory as the binary:
+
+```bash
+.
+├── ms-cosmo
+│   ├── bootstrap
+│   ├── cosmo.yaml
+│   └── supergraph.json
+```
+
+And deploy it to AWS Lambda using your favorite method, onto a runtime of `provided.al2023`.
+
+I also recommend setting the following environment variables, to disable any additional behaviors on start up and to properly pick up configuration:
+
+- CONFIG_PATH: 'cosmo.yaml'
+- ROUTER_CONFIG_PATH: 'supergraph.json'
+- ENGINE_ENABLE_REQUEST_TRACING: 'false'
+
+## Development
+
 Run the router in local HTTP mode:
 
 ```bash
@@ -23,11 +59,3 @@ Update dependencies:
 ```bash
 $ go mod tidy
 ```
-
-Build the go module for Arm64 and without RPC:
-
-```bash
-$ GOOS=linux GOARCH=arm64 go build -tags lambda.norpc -o bin/bootstrap cmd/main.go
-```
-
-You can see more about build recommendations here https://aws.amazon.com/blogs/compute/migrating-aws-lambda-functions-from-the-go1-x-runtime-to-the-custom-runtime-on-amazon-linux-2/.

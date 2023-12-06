@@ -2,17 +2,17 @@ version: '1'
 
 # General router options
 graph:
-  name: 'router' # or FEDERATED_GRAPH_NAME.
-  # Token is set via GRAPH_API_TOKEN.
+  name: '' # or FEDERATED_GRAPH_NAME.
+  token: ''
 
 outer_config_path: './supergraph.json'
 
-log_level: 'debug'
-listen_addr: '127.0.0.1:4000'
+log_level: 'info'
+listen_addr: '127.0.0.1:4005'
 playground_enabled: true
 introspection_enabled: true
-json_log: true
-controlplane_url: 'https://cosmo-cp.wundergraph.com'
+# json_log: true
+# controlplane_url: 'https://cosmo-cp.wundergraph.com'
 
 cors:
   allow_origins: ['*']
