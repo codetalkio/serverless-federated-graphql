@@ -46,7 +46,6 @@ func invoke(r *http.Request) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
 	return res, nil
 }
 
@@ -76,7 +75,7 @@ func HandleRequest(w http.ResponseWriter, r *http.Request) {
 
 	// Finally, return the response.
 	body_res, err := io.ReadAll(res.Body)
-	if err != nil || body_res == nil {
+	if err != nil || body_res == nil || string(body_res) == "" {
 		http.Error(w, "Error reading router response", http.StatusInternalServerError)
 		return
 	}

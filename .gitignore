@@ -13,3 +13,4 @@ target/
 bootstrap*
 
 lambda-cosmo/bin/*
+bin/*
