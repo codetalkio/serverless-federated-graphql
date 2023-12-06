@@ -1,10 +1,14 @@
 # Lambda Variants of Apollo Router
 
-> Minimal/scrappy build of Apollo Router built for Lambda via Amazon Linux 2.
+> Minimal/scrappy build of Apollo Router built for Lambda via Amazon Linux 2, and comparison to alternatives (Cosmo, Mesh, Gateway).
 
-**TL;DR**: Of the Apollo Router variants, `lambda-directly-optimized` beats all other variants and is on par with the alternatives for Cold and Warm Starts (use the `bootstrap-directly-optimized-graviton-arm-size` binary). That said, I'd actually recommend the `lambda-cosmo` alternative which is a lot less hacky and more performant.
+- ⚡️ **TL;DR** I'd recommend the `lambda-cosmo-custom` alternative which is a lot less hacky and much more performant (300-500ms Cold Starts). See [the README for details on how to use](./lambda-cosmo-custom).
+
+- ⚡️ **TL;DR 2**: Of the Apollo Router variants, `lambda-directly-optimized` beats all other variants and is on par with the alternatives for Cold and Warm Starts (use the `bootstrap-directly-optimized-graviton-arm-size` binary).
 
 Currently [Apollo Router](https://github.com/apollographql/router) does not support running in AWS Lambda (https://github.com/apollographql/router/issues/364). Instead it's focusing on running as a long-lived process, which means that it's less optimized for quick startup, as well as built with dependencies that does not mesh with Lambda's Amazon Linux 2 environment.
+
+## Methodology
 
 But what if we were a little bit creative? Could we get it to work? The answer is: Yes! (sorta)...
 
@@ -21,6 +25,8 @@ We do some additional tricks to reduce the size of the `bootstrap-directly-optim
 
 Check out the code and `Dockerfile` for each. There's really not a lot going on, and it is a minimal implementation compared to what you'd want in Production. My current recommendation would be either use the `bootstrap-directly-optimized-graviton-arm` binary produced from the `lambda-directly-optimized` approach in AWS Lambda, or to run Apollo Router in App Runner, which it does extremely well (I can max out the allowed 200 concurrent requests on a 0.25 CPU and 0.5GB Memory setting).
 
+## Measurements
+
 | Approach | Advantage     | Performance |
 |----------| ------------- |-------------|
 | `lambda-with-server` | · Full router functionality (almost) | · Cold Start: ~1.58s <br/>· Warm Start: ~49ms |
@@ -31,12 +37,12 @@ Comparison to alternatives:
 
 | Measurement (ms) | `GraphQL Mesh` (512 MB) | `GraphQL Mesh` (1024 MB) | `GraphQL Mesh` (2048 MB) | `lambda-directly-optimized` (512 MB) | `lambda-directly-optimized` (1024 MB) | `lambda-directly-optimized` (2048 MB) | `Cosmo` (512 MB) | `Cosmo` (1024 MB) | `Cosmo` (2048 MB) | `Apollo Gateway` (512 MB) | `Apollo Gateway` (1024 MB) | `Apollo Gateway` (2048 MB) |
 |-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|
-| Average warm start response time | 10.2 ms | 10 ms | 10.3 ms | 6.8 ms | 6.2 ms | 6.8 ms | 21.2 ms | 21.1 ms | 24.1 ms | 8.8 ms | 8.9 ms | 9.8 ms |
-| Average cold start response time | 615.9 ms | 609.8 ms | 565.2 ms | 703.3 ms | 681.8 ms | 678 ms | 667.7 ms | 552.2 ms | 466.2 ms | 1037.7 ms | 871.2 ms | 851 ms |
-| Fastest warm response time | 6.9 ms | 7.9 ms | 8 ms | 5 ms | 5 ms | 6 ms | 15.9 ms | 15.9 ms | 15.9 ms | 6.9 ms | 6.9 ms | 6.9 ms |
-| Slowest warm response time | 38.9 ms | 38.9 ms | 38.9 ms | 11 ms | 11 ms | 9 ms | 28.9 ms | 27.9 ms | 27.9 ms | 12 ms | 12 ms | 10.9 ms |
-| Fastest cold response time  | 495.9 ms | 495.9 ms | 495.9 ms | 625 ms | 625 ms | 625 ms | 427 ms | 427 ms | 427 ms | 797 ms | 797 ms | 797 ms |
-| Slowest cold response time | 877 ms | 786.9 ms | 786.9 ms | 2724 ms | 804 ms | 724.9 ms | 1375 ms | 888 ms | 621.9 ms | 1170 ms | 1039.9 ms | 898 ms |
+| Average warm start response time | 10.2 ms | 10 ms | 10.3 ms | 6.8 ms | 6.2 ms | 6.8 ms | 10.7 ms | 10 ms | 9.8 ms | 8.8 ms | 8.9 ms | 9.8 ms |
+| Average cold start response time | 615.9 ms | 609.8 ms | 565.2 ms | 703.3 ms | 681.8 ms | 678 ms | 442.9 ms | 464.7 ms | 427.7 ms | 1037.7 ms | 871.2 ms | 851 ms |
+| Fastest warm response time | 6.9 ms | 7.9 ms | 8 ms | 5 ms | 5 ms | 6 ms | 6.9 ms | 7.9 ms | 7.9 ms | 6.9 ms | 6.9 ms | 6.9 ms |
+| Slowest warm response time | 38.9 ms | 38.9 ms | 38.9 ms | 11 ms | 11 ms | 9 ms | 19 ms | 11.9 ms | 10.9 ms | 12 ms | 12 ms | 10.9 ms |
+| Fastest cold response time  | 495.9 ms | 495.9 ms | 495.9 ms | 625 ms | 625 ms | 625 ms | 328 ms | 328 ms | 328 ms | 797 ms | 797 ms | 797 ms |
+| Slowest cold response time | 877 ms | 786.9 ms | 786.9 ms | 2724 ms | 804 ms | 724.9 ms | 581 ms | 531 ms | 505 ms | 1170 ms | 1039.9 ms | 898 ms |
 
 Overview:
 
@@ -237,21 +243,21 @@ Breakdown of only the router (making no queries to subgraphs):
 
 # Comparison: Federation via Cosmo Router
 
-Another comparison point against the Apollo Router PoC, here's one alternative using [Cosmo Router](https://cosmo-docs.wundergraph.com/router/intro).
+Another comparison point against the Apollo Router PoC, here's one alternative using [Cosmo Router](https://cosmo-docs.wundergraph.com/router/intro), using the variant from [lambda-cosmo-custom](./lambda-cosmo-custom).
 
-Cold start (653ms):
+Cold start (339ms):
 
-<img width="1344" alt="ms-cosmo (Cold, No query) Screenshot 2023-11-30 at 18 58 14" src="https://github.com/codetalkio/apollo-router-lambda/assets/1189998/810e10c5-5c21-4727-8667-169568c37cad">
+<img width="1166" alt="ms-cosmo best (Cold, No query) Screenshot 2023-12-06 at 22 57 57" src="https://github.com/codetalkio/apollo-router-lambda/assets/1189998/f5872ddd-87c8-4324-8687-71ed24fc73dd">
 
 Breakdown of only the router (making no queries to subgraphs):
 
-| Measurement (ms) | 512 MB | 1024 MB | 2048 MB |
+| Measurement (ms) | ms-cosmo (512 MB) | ms-cosmo (1024 MB) | ms-cosmo (2048 MB) |
 |-------------|-------------|-------------|-------------|
-| Average warm start response time | 21.2 ms | 21.1 ms | 24.1 ms |
-| Average cold start response time | 667.7 ms | 552.2 ms | 466.2 ms |
-| Fastest warm response time | 15.9 ms | 15.9 ms | 15.9 ms |
-| Slowest warm response time | 28.9 ms | 27.9 ms | 27.9 ms |
-| Fastest cold response time  | 427 ms | 427 ms | 427 ms |
-| Slowest cold response time | 1375 ms | 888 ms | 621.9 ms |
+| Average warm start response time | 10.7 ms | 10 ms | 9.8 ms |
+| Average cold start response time | 442.9 ms | 464.7 ms | 427.7 ms |
+| Fastest warm response time | 6.9 ms | 7.9 ms | 7.9 ms |
+| Slowest warm response time | 19 ms | 11.9 ms | 10.9 ms |
+| Fastest cold response time  | 328 ms | 328 ms | 328 ms |
+| Slowest cold response time | 581 ms | 531 ms | 505 ms |
 
 
