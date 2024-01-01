@@ -1,24 +1,45 @@
-# Lambda Variants of Apollo Router
+# Serverless: Federated GraphQL
 
-> Minimal/scrappy build of Apollo Router built for Lambda via Amazon Linux 2, and comparison to alternatives (Cosmo, Mesh, Gateway).
+> Ever wanted to run Federated GraphQL in AWS Lambda?
+
+In this repo we do a comparison of Cold/Warm Start times of Federated GraphQL solutions (Cosmo, Mesh, Apollo Gateway, Apollo Router) and provide a minimal/scrappy build of Apollo Router built for Lambda via Amazon Linux 2, as well as a version of Cosmo built in Go that you can utilize.
 
 - ⚡️ **TL;DR** I'd recommend the `lambda-cosmo-custom` alternative which is a lot less hacky and much more performant (300-500ms Cold Starts). See [the README for details on how to use](./lambda-cosmo-custom).
 
 - ⚡️ **TL;DR 2**: Of the Apollo Router variants, `lambda-directly-optimized` beats all other variants and is on par with the alternatives for Cold and Warm Starts (use the `bootstrap-directly-optimized-graviton-arm-size` binary).
 
-Currently [Apollo Router](https://github.com/apollographql/router) does not support running in AWS Lambda (https://github.com/apollographql/router/issues/364). Instead it's focusing on running as a long-lived process, which means that it's less optimized for quick startup, as well as built with dependencies that does not mesh with Lambda's Amazon Linux 2 environment.
+Overview:
+
+- [Motivation](#motivation)
+- [Measurements](#measurements)
+- [How to use](#how-to-use)
+- [Comparison: Federation via Apollo Router (Cold Starts)](#comparison-federation-via-apollo-router-cold-start)
+- [Comparison: Federation via Apollo Router (Warm Starts)](#comparison-federation-via-apollo-router-warm-start)
+- [Comparison: Rust Subgraph in AWS Lambda](#comparison-rust-subgraph-in-aws-lambda)
+- [Comparison: Federation via Apollo Gateway](#comparison-federation-via-apollo-gateway)
+- [Comparison: Federation via GraphQL Mesh](#comparison-federation-via-graphql-mesh)
+- [Comparison: Federation via Cosmo Router](#comparison-federation-via-cosmo-router)
+
+
+## Motivation
+
+Serverless is great to get started with a low-cost Cloud setup that'll scale you from zero to profitable without having to worry about infrastructure overhead. That said, there are not many great Federated GraphQL solutions that work out-of-the box for Serverless. Router from Apollo and Cosmo from Wundergraph are both tailoered to long-running processes, e.g. in a k8s cluster. Mesh and Apollo Gateway are both JavaScript programs which incur a massive penalty in Cold Start times and are thus not a great solution.
 
 ## Methodology
 
+Currently [Apollo Router](https://github.com/apollographql/router) does not support running in AWS Lambda (https://github.com/apollographql/router/issues/364). Instead it's focusing on running as a long-lived process, which means that it's less optimized for quick startup, as well as built with dependencies that does not mesh with Lambda's Amazon Linux 2 environment. Similarly for Cosmo, although with Cosmo we can actually use the binary although with a bit of indirection.
+
 But what if we were a little bit creative? Could we get it to work? The answer is: Yes! (sorta)...
 
-This repository contains two examples:
+This repository contains five examples:
 
-- `lambda-with-server/`: Spins up a Apollo Router using the [apollo-router crate](), and proxies Lambda Events to the HTTP server locally.
+- `lambda-with-server/`: Spins up a Apollo Router using the [apollo-router crate](https://crates.io/crates/apollo-router), and proxies Lambda Events to the HTTP server locally.
 - `lambda-directly/`: Uses the [TestHarness](https://github.com/apollographql/router/blob/a6f129cdb75038eae6437e24876723194aeaf165/apollo-router/src/test_harness.rs#L38-L78) that Apollo Router uses to easily make GraphQL requests in its tests without needing a full Router. The Lambda takes the incoming event, runs it through the `TestHarness` and returns the result.
 - `lambda-directly-optimized/`: Same approach as `lambda-directly`, but we only construct the [TestHarness](https://github.com/codetalkio/apollo-router-lambda/blob/a0899105794b50a7c9ab200131a8b45266328e96/lambda-directly-optimized/src/main.rs#L85-L91) once and then reuse it across all invocations. We also optimize loading configurations as well as initializing the Supergraph by doing it during [Lambda's Initialization phase](https://hichaelmart.medium.com/shave-99-93-off-your-lambda-bill-with-this-one-weird-trick-33c0acebb2ea), which runs at full resource. Additionally, we buid this for the ARM architecture and also optimize it for the AWS Graviton CPU.
+- `lambda-cosmo`: A small Rust wrapper that starts the Cosmo binary and proxies events to the server.
+- `lambda-cosmo-custom`: Spins up a Cosmo sever using the [Cosmo Router](https://github.com/wundergraph/cosmo/tree/main/router) and proxies Lambda Events to the HTTP server locally, similar to `lambda-with-server`.
 
-We do some additional tricks to reduce the size of the `bootstrap-directly-optimized-graviton-arm-size` binary, which has an impact on Cold Starts:
+We do some additional tricks to reduce the size of the Apollo variants in the `bootstrap-directly-optimized-graviton-arm-size` binary, which has an impact on Cold Starts:
 - We [remove location details](https://github.com/johnthagen/min-sized-rust#remove-location-details), [panic string formatting](https://github.com/johnthagen/min-sized-rust#remove-panic-string-formatting-with-panic_immediate_abort), and [abort on panic](https://github.com/johnthagen/min-sized-rust#abort-on-panic)
 - We [rebuild and optimize libstd](https://github.com/johnthagen/min-sized-rust#optimize-libstd-with-build-std) with build-std, which combined with the above brings us from ~71MB down to ~49MB.
 - ~~We use [upx](https://github.com/upx/upx) to reduce the size of the binaries.~~ Unfortuntately, the overhead of decompressing the binary significantly increases Cold Start times, e.g. `lambda-directly-optimized` goes up from 0.8s to 2.5s, despite a binary reduction from 73.71MB to 18MB.
@@ -26,14 +47,6 @@ We do some additional tricks to reduce the size of the `bootstrap-directly-optim
 Check out the code and `Dockerfile` for each. There's really not a lot going on, and it is a minimal implementation compared to what you'd want in Production. My current recommendation would be either use the `bootstrap-directly-optimized-graviton-arm` binary produced from the `lambda-directly-optimized` approach in AWS Lambda, or to run Apollo Router in App Runner, which it does extremely well (I can max out the allowed 200 concurrent requests on a 0.25 CPU and 0.5GB Memory setting).
 
 ## Measurements
-
-| Approach | Advantage     | Performance |
-|----------| ------------- |-------------|
-| `lambda-with-server` | · Full router functionality (almost) | · Cold Start: ~1.58s <br/>· Warm Start: ~49ms |
-| `lambda-directly` | · No need to wait for a server to start first (lower overhead) | · Cold Start: ~1.32s <br/>· Warm Start: ~314ms |
-| `lambda-directly-optimized` | · No need to wait for a server to start first (lower overhead)<br/>· Built for ARM<br/>· Optimized for the Graviton CPU | Optimized for size<br/>· Cold Start: ~0.7s <br/>· Warm Start: ~20ms<br/>Optimized for speed<br/>· Cold Start: ~0.9s <br/>· Warm Start: ~20ms |
-
-Comparison to alternatives:
 
 | Measurement (ms) | `GraphQL Mesh` (512 MB) | `GraphQL Mesh` (1024 MB) | `GraphQL Mesh` (2048 MB) | `lambda-directly-optimized` (512 MB) | `lambda-directly-optimized` (1024 MB) | `lambda-directly-optimized` (2048 MB) | `Cosmo` (512 MB) | `Cosmo` (1024 MB) | `Cosmo` (2048 MB) | `Apollo Gateway` (512 MB) | `Apollo Gateway` (1024 MB) | `Apollo Gateway` (2048 MB) |
 |-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|
@@ -44,15 +57,13 @@ Comparison to alternatives:
 | Fastest cold response time  | 495.9 ms | 495.9 ms | 495.9 ms | 625 ms | 625 ms | 625 ms | 328 ms | 328 ms | 328 ms | 797 ms | 797 ms | 797 ms |
 | Slowest cold response time | 877 ms | 786.9 ms | 786.9 ms | 2724 ms | 804 ms | 724.9 ms | 581 ms | 531 ms | 505 ms | 1170 ms | 1039.9 ms | 898 ms |
 
-Overview:
+Of the Apollo variants specifically:
 
-- [How to use](#how-to-use)
-- [Cold Starts](#cold-starts)
-- [Warm Starts](#warm-starts)
-- [Comparison: Rust Subgraph in AWS Lambda](#comparison-rust-subgraph-in-aws-lambda)
-- [Comparison: Federation via Apollo Gateway](#comparison-federation-via-apollo-gateway)
-- [Comparison: Federation via GraphQL Mesh](#comparison-federation-via-graphql-mesh)
-- [Comparison: Federation via Cosmo Router](#comparison-federation-via-cosmo-router)
+| Approach | Advantage     | Performance |
+|----------| ------------- |-------------|
+| `lambda-with-server` | · Full router functionality (almost) | · Cold Start: ~1.58s <br/>· Warm Start: ~49ms |
+| `lambda-directly` | · No need to wait for a server to start first (lower overhead) | · Cold Start: ~1.32s <br/>· Warm Start: ~314ms |
+| `lambda-directly-optimized` | · No need to wait for a server to start first (lower overhead)<br/>· Built for ARM<br/>· Optimized for the Graviton CPU | Optimized for size<br/>· Cold Start: ~0.7s <br/>· Warm Start: ~20ms<br/>Optimized for speed<br/>· Cold Start: ~0.9s <br/>· Warm Start: ~20ms |
 
 # How to use
 
@@ -94,7 +105,8 @@ You now have the following contents in your `apollo-router` folder:
 
 And you're ready to deploy using your preferred method of AWS CDK/SAM/SLS/SST/CloudFormation/Terraform.
 
-# Cold Starts
+# Comparison: Federation via Apollo Router (Cold Start)
+
 The `lambda-directly-optimized` approach is the only one that enters the realm of "acceptable" cold starts. Still high, but almost always below 1 second. Both of the other approachs unfortunately have quite a high cold start time. The `lambda-directly` approach wins by a tiny margin, but none are great. None of the variants talk to any Subgraphs, this is purely measuring the overhead of startup.
 
 `lambda-with-server`
@@ -160,7 +172,7 @@ Breakdown of only the router (making no queries to subgraphs):
 | Slowest cold response time | 985 ms | 985 ms | 894.9 ms | 894.9 ms | 762 ms |
 
 
-# Warm Starts
+# Comparison: Federation via Apollo Router (Warm Start)
 
 Here we see both `lambda-directly-optimized` and `lambda-with-server` shine. Once it's started the Apollo Router/TestHarness, then it has relatively little overhead. `lambda-directly` on the other hand will build a `TestHarness` on each new request, and will keep paying a high cost, slowing it down.
 
