@@ -18,6 +18,9 @@ import (
 
 	// HTTP adapter used for local server setup.
 	"github.com/awslabs/aws-lambda-go-api-proxy/httpadapter"
+
+	// Custom modules.
+	_ "router/module"
 )
 
 // The invoke function is used to invoke the Cosmo Router. It simply proxies

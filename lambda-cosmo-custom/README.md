@@ -34,24 +34,26 @@ I also recommend setting the following environment variables, to disable any add
 - ROUTER_CONFIG_PATH: 'supergraph.json'
 - ENGINE_ENABLE_REQUEST_TRACING: 'false'
 
+I've also added a module that lets you overwrite your subgraph URLs via environment variables. E.g. if you have the subgraph `products` and want to overwrite its URL, you can set the env variable `SUBGRAPH_PRODUCTS_URL` to the new URL.
+
 ## Development
 
 Run the router in local HTTP mode:
 
 ```bash
-$ HTTP_PORT=4010 go run main.go
+$ HTTP_PORT=4010 go run cmd/main.go
 ```
 
 Or,
 
 ```bash
-$ HTTP_PORT=4010 bunx nodemon --watch './**/*.go' --signal SIGTERM --exec 'go' run main.go
+$ HTTP_PORT=4010 bunx nodemon --watch './**/*.go' --signal SIGTERM --exec 'go' run cmd/main.go
 ```
 
 Make a simple request that doesn't require any running subgraphs:
 
 ```bash
-$ curl --data '{ "query": "query ExampleQuery{ __typename }", "operationName": "ExampleQuery" }'  --header 'Content-Type: application/json' http://localhost:4010
+$ curl --data '{ "query": "query ExampleQuery{ products { id } }", "operationName": "ExampleQuery" }'  --header 'Content-Type: application/json' http://localhost:4010
 ```
 
 Update dependencies:
